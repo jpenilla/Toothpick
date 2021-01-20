@@ -24,6 +24,9 @@
 package xyz.jpenilla.toothpick
 
 import org.gradle.api.Project
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.withType
 import xyz.jpenilla.toothpick.task.createApplyPatchesTask
 import xyz.jpenilla.toothpick.task.createImportMCDevTask
 import xyz.jpenilla.toothpick.task.createInitGitSubmodulesTask
@@ -35,13 +38,13 @@ import xyz.jpenilla.toothpick.task.createUpstreamCommitTask
 
 @Suppress("UNUSED_VARIABLE")
 internal fun Project.initToothpickTasks() {
-  if (project.hasProperty("fast")) {
-    gradle.taskGraph.whenReady {
-      gradle.taskGraph.allTasks.filter {
-        it.name.contains("test", ignoreCase = true) || it.name.contains("javadoc", ignoreCase = true)
-      }.forEach {
-        it.onlyIf { false }
-      }
+  gradle.taskGraph.whenReady {
+    val fast = project.hasProperty("fast")
+    tasks.withType<Test> {
+      onlyIf { !fast }
+    }
+    tasks.withType<Javadoc> {
+      onlyIf { !fast || gradle.taskGraph.allTasks.any { it.name.contains("publish", ignoreCase = true) } }
     }
   }
 
