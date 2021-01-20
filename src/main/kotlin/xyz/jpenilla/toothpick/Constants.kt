@@ -23,5 +23,5 @@
  */
 package xyz.jpenilla.toothpick
 
-const val taskGroup = "xyz.jpenilla.toothpick.getToothpick"
+const val taskGroup = "toothpick"
 const val internalTaskGroup = "toothpick_internal"

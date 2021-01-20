@@ -29,6 +29,6 @@ import org.gradle.kotlin.dsl.create
 
 class Toothpick : Plugin<Project> {
   override fun apply(project: Project) {
-    project.extensions.create<ToothpickExtension>("xyz.jpenilla.toothpick.getToothpick", project.objects)
+    project.extensions.create<ToothpickExtension>("toothpick", project.objects)
   }
 }
