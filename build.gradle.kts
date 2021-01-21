@@ -32,6 +32,7 @@ java {
 
 tasks {
   compileKotlin {
+    kotlinOptions.apiVersion = "1.3"
     kotlinOptions.jvmTarget = "1.8"
   }
 }
@@ -49,7 +50,7 @@ extensions.getByType<PublishingExtension>().publications.withType<MavenPublicati
   pom {
     name.set(project.name)
     description.set(project.description)
-    url.set("https://github.com/jmanpenilla/Toothpick")
+    url.set("https://github.com/jpenilla/Toothpick")
 
     developers {
       developer {
@@ -61,7 +62,7 @@ extensions.getByType<PublishingExtension>().publications.withType<MavenPublicati
     licenses {
       license {
         name.set("MIT")
-        url.set("https://github.com/jmanpenilla/Toothpick/raw/master/license.txt")
+        url.set("https://github.com/jpenilla/Toothpick/raw/master/license.txt")
         distribution.set("repo")
       }
     }
