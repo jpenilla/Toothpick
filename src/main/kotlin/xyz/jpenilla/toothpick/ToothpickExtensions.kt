@@ -27,10 +27,10 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.findByType
 import java.io.File
 
-val Project.toothpick: ToothpickExtension
+public val Project.toothpick: ToothpickExtension
   get() = rootProject.extensions.findByType(ToothpickExtension::class)!!
 
-fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
+public fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
   toothpick.project = this
   receiver(toothpick)
   allprojects {
@@ -41,11 +41,11 @@ fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
   initToothpickTasks()
 }
 
-val Project.lastUpstream: File
+internal val Project.lastUpstream: File
   get() = rootProject.projectDir.resolve("last-${toothpick.upstreamLowercase}")
 
-val Project.rootProjectDir: File
+internal val Project.rootProjectDir: File
   get() = rootProject.projectDir
 
-val Project.upstreamDir: File
+internal val Project.upstreamDir: File
   get() = rootProject.projectDir.resolve(toothpick.upstream)

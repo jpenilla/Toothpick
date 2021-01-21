@@ -28,9 +28,9 @@ import java.io.File
 import java.util.LinkedList
 import kotlin.streams.asSequence
 
-data class CmdResult(val exitCode: Int, val output: String?)
+public data class CmdResult(val exitCode: Int, val output: String?)
 
-fun Project.cmd(
+public fun Project.cmd(
   vararg args: String,
   dir: File = rootProject.projectDir,
   printOut: Boolean = false
@@ -56,7 +56,7 @@ fun Project.cmd(
   return CmdResult(exit, output)
 }
 
-fun ensureSuccess(
+internal fun ensureSuccess(
   cmd: CmdResult,
   errorHandler: CmdResult.() -> Unit = {}
 ): String? {
@@ -68,14 +68,14 @@ fun ensureSuccess(
   return output
 }
 
-fun Project.gitCmd(
+public fun Project.gitCmd(
   vararg args: String,
   dir: File = rootProject.projectDir,
   printOut: Boolean = false
 ): CmdResult =
   cmd("git", *args, dir = dir, printOut = printOut)
 
-fun Project.bashCmd(
+public fun Project.bashCmd(
   vararg args: String,
   dir: File = rootProject.projectDir,
   printOut: Boolean = false
@@ -107,7 +107,7 @@ internal fun Project.reEnableGitSigning(repo: File) {
   gitCmd("config", "commit.gpgsign", "true", dir = repo)
 }
 
-fun Project.gitHash(repo: File): String =
+internal fun Project.gitHash(repo: File): String =
   gitCmd("rev-parse", "HEAD", dir = repo).output ?: ""
 
-val jenkins = System.getenv("JOB_NAME") != null
+internal val jenkins = System.getenv("JOB_NAME") != null

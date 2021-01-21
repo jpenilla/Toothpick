@@ -34,13 +34,16 @@ import xyz.jpenilla.toothpick.gitCmd
 import xyz.jpenilla.toothpick.internalTaskGroup
 import xyz.jpenilla.toothpick.toothpick
 
-val json = Json { prettyPrint = true }
+private val json = Json { prettyPrint = true }
 
 @Serializable
-data class ImportsContainer(val nmsImports: List<String>, val libraryImports: List<LibraryImport>)
+private data class ImportsContainer(
+  val nmsImports: List<String> = emptyList(),
+  val libraryImports: List<LibraryImport> = emptyList()
+)
 
 @Serializable
-data class LibraryImport(val group: String, val library: String, val prefix: String, val file: String)
+private data class LibraryImport(val group: String, val library: String, val prefix: String, val file: String)
 
 internal fun Project.createImportMCDevTask(
   receiver: Task.() -> Unit = {}
@@ -101,7 +104,7 @@ internal fun Project.createImportMCDevTask(
     // Imports from mcdevimports.json
     val importsFile = projectDir.resolve("mcdevimports.json")
     if (!importsFile.exists()) {
-      importsFile.writeText(json.encodeToString(ImportsContainer(emptyList(), emptyList())))
+      importsFile.writeText(json.encodeToString(ImportsContainer()))
     }
     val imports: ImportsContainer = json.decodeFromString(importsFile.readText())
     imports.nmsImports.forEach(::importNMS)

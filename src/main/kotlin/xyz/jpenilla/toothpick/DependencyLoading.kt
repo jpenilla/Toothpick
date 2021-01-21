@@ -32,7 +32,7 @@ import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.project
 
-fun RepositoryHandler.loadRepositories(project: Project) {
+public fun RepositoryHandler.loadRepositories(project: Project) {
   val pomFile = project.projectDir.resolve("pom.xml")
   if (!pomFile.exists()) return
   val dom = parseXml(pomFile)
@@ -45,7 +45,7 @@ fun RepositoryHandler.loadRepositories(project: Project) {
   }
 }
 
-fun DependencyHandlerScope.loadDependencies(project: Project) {
+public fun DependencyHandlerScope.loadDependencies(project: Project) {
   val pomFile = project.projectDir.resolve("pom.xml")
   if (!pomFile.exists()) return
   val dom = parseXml(pomFile)

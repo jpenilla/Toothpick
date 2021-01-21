@@ -29,47 +29,47 @@ import java.io.File
 import java.util.Locale
 
 @Suppress("UNUSED_PARAMETER")
-open class ToothpickExtension(objects: ObjectFactory) {
-  lateinit var project: Project
-  lateinit var forkName: String
-  val forkNameLowercase
+public open class ToothpickExtension(objects: ObjectFactory) {
+  public lateinit var project: Project
+  public lateinit var forkName: String
+  public val forkNameLowercase: String
     get() = forkName.toLowerCase(Locale.ENGLISH)
-  lateinit var forkUrl: String
-  lateinit var forkVersion: String
-  lateinit var groupId: String
-  lateinit var minecraftVersion: String
-  lateinit var nmsRevision: String
-  lateinit var nmsPackage: String
+  public lateinit var forkUrl: String
+  public lateinit var forkVersion: String
+  public lateinit var groupId: String
+  public lateinit var minecraftVersion: String
+  public lateinit var nmsRevision: String
+  public lateinit var nmsPackage: String
 
-  lateinit var upstream: String
-  val upstreamLowercase
+  public lateinit var upstream: String
+  public val upstreamLowercase: String
     get() = upstream.toLowerCase(Locale.ENGLISH)
-  lateinit var upstreamBranch: String
+  public lateinit var upstreamBranch: String
 
-  var paperclipName: String = ""
+  public var paperclipName: String = ""
     get(): String = if (field.isEmpty()) {
       "$forkNameLowercase-paperclip.jar"
     } else "$field.jar"
 
-  lateinit var serverProject: ToothpickSubproject
-  fun server(receiver: ToothpickSubproject.() -> Unit) {
+  public lateinit var serverProject: ToothpickSubproject
+  public fun server(receiver: ToothpickSubproject.() -> Unit) {
     serverProject = ToothpickSubproject()
     receiver(serverProject)
   }
 
-  lateinit var apiProject: ToothpickSubproject
-  fun api(receiver: ToothpickSubproject.() -> Unit) {
+  public lateinit var apiProject: ToothpickSubproject
+  public fun api(receiver: ToothpickSubproject.() -> Unit) {
     apiProject = ToothpickSubproject()
     receiver(apiProject)
   }
 
-  val subprojects: Map<String, ToothpickSubproject>
+  public val subprojects: Map<String, ToothpickSubproject>
     get() = if (::forkName.isInitialized) mapOf(
       "$forkName-API" to apiProject,
       "$forkName-Server" to serverProject
     ) else emptyMap()
 
-  val paperDir: File by lazy {
+  internal val paperDir: File by lazy {
     if (upstream == "Paper") {
       project.upstreamDir
     } else {
@@ -80,6 +80,6 @@ open class ToothpickExtension(objects: ObjectFactory) {
     }
   }
 
-  val paperWorkDir: File
+  internal val paperWorkDir: File
     get() = paperDir.resolve("work/Minecraft/${minecraftVersion}")
 }

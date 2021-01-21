@@ -7,8 +7,7 @@ version = "1.0.0-SNAPSHOT"
 plugins {
   `maven-publish`
   `kotlin-dsl`
-  `java-gradle-plugin`
-  kotlin("plugin.serialization") version "1.3.72"
+  kotlin("plugin.serialization") version "1.4.20"
   id("net.kyori.indra.license-header") version "1.2.1"
 }
 
@@ -30,9 +29,13 @@ java {
   withSourcesJar()
 }
 
+kotlin {
+  explicitApi()
+}
+
 tasks {
   compileKotlin {
-    kotlinOptions.apiVersion = "1.3"
+    kotlinOptions.apiVersion = "1.4"
     kotlinOptions.jvmTarget = "1.8"
   }
 }
