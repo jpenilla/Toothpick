@@ -69,17 +69,33 @@ public open class ToothpickExtension(objects: ObjectFactory) {
       "$forkName-Server" to serverProject
     ) else emptyMap()
 
+  internal val upstreamDir: File
+    get() = project.projectDir.resolve(upstream)
+
   internal val paperDir: File by lazy {
     if (upstream == "Paper") {
-      project.upstreamDir
+      upstreamDir
     } else {
-      project.upstreamDir.walk().find {
+      upstreamDir.walk().find {
         it.name == "Paper" && it.isDirectory
           && it.resolve("work/Minecraft/${minecraftVersion}").exists()
       } ?: error("Failed to find Paper directory!")
     }
   }
 
+  internal val lastUpstream: File
+    get() = project.projectDir.resolve("last-${upstreamLowercase}")
+
   internal val paperWorkDir: File
     get() = paperDir.resolve("work/Minecraft/${minecraftVersion}")
+
+  internal val mavenCommand: String by lazy {
+    if (cmd("mvn", "-v", dir = project.projectDir).exitCode == 0) {
+      return@lazy "mvn"
+    }
+    if (cmd("mvn.cmd", "-v", dir = project.projectDir).exitCode == 0) {
+      return@lazy "mvn.cmd"
+    }
+    error("Unable to locate maven. Please ensure you have maven installed and on your path.")
+  }
 }

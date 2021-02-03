@@ -23,29 +23,27 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.cmd
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.jenkins
-import xyz.jpenilla.toothpick.rootProjectDir
-import xyz.jpenilla.toothpick.taskGroup
-import xyz.jpenilla.toothpick.toothpick
+import java.io.File
 
-internal fun Project.createPaperclipTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("paperclip") {
-  receiver(this)
-  group = taskGroup
-  doLast {
+public open class Paperclip : ToothpickTask() {
+  @InputFile
+  public lateinit var patchedJar: File
+
+  @TaskAction
+  private fun paperclip() {
     val workDir = toothpick.paperDir.resolve("work")
     val paperclipDir = workDir.resolve("Paperclip")
     val vanillaJarPath =
       workDir.resolve("Minecraft/${toothpick.minecraftVersion}/${toothpick.minecraftVersion}.jar").absolutePath
-    val patchedJarPath = inputs.files.singleFile.absolutePath
+    val patchedJarPath = patchedJar.absolutePath
     logger.lifecycle(">>> Building paperclip")
     val paperclipCmd = arrayListOf(
-      "mvn", "clean", "package",
+      toothpick.mavenCommand, "clean", "package",
       "-Dmcver=${toothpick.minecraftVersion}",
       "-Dpaperjar=$patchedJarPath",
       "-Dvanillajar=$vanillaJarPath"
@@ -53,7 +51,7 @@ internal fun Project.createPaperclipTask(
     if (jenkins) paperclipCmd.add("-Dstyle.color=never")
     ensureSuccess(cmd(*paperclipCmd.toTypedArray(), dir = paperclipDir, printOut = true))
     val paperClip = paperclipDir.resolve("assembly/target/paperclip-${toothpick.minecraftVersion}.jar")
-    val destination = rootProjectDir.resolve(toothpick.paperclipName)
+    val destination = toothpick.project.projectDir.resolve(toothpick.paperclipName)
     paperClip.copyTo(destination, overwrite = true)
     logger.lifecycle(">>> ${toothpick.paperclipName} saved to root project directory")
   }

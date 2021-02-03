@@ -23,20 +23,13 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.gitCmd
-import xyz.jpenilla.toothpick.taskGroup
-import xyz.jpenilla.toothpick.upstreamDir
 
-internal fun Project.createInitGitSubmodulesTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("initGitSubmodules") {
-  receiver(this)
-  group = taskGroup
-  onlyIf { !upstreamDir.resolve(".git").exists() }
-  doLast {
-    val exit = gitCmd("submodule", "update", "--init", "--recursive", printOut = true).exitCode
+public open class InitGitSubmodules : ToothpickTask() {
+  @TaskAction
+  private fun initGitSubmodules() {
+    val exit = gitCmd("submodule", "update", "--init", "--recursive", printOut = true, dir = project.projectDir).exitCode
     if (exit != 0) {
       error("Failed to checkout git submodules: git exited with code $exit")
     }

@@ -23,22 +23,17 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
 import xyz.jpenilla.toothpick.reEnableGitSigning
-import xyz.jpenilla.toothpick.taskGroup
+import xyz.jpenilla.toothpick.rootProjectDir
 import xyz.jpenilla.toothpick.temporarilyDisableGitSigning
-import xyz.jpenilla.toothpick.toothpick
 import java.nio.file.Files
 
-internal fun Project.createApplyPatchesTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("applyPatches") {
-  receiver(this)
-  group = taskGroup
-  doLast {
+public open class ApplyPatches : ToothpickTask() {
+  @TaskAction
+  private fun applyPatches() {
     for ((name, subproject) in toothpick.subprojects) {
       val (sourceRepo, projectDir, patchesDir) = subproject
 
@@ -48,7 +43,7 @@ internal fun Project.createApplyPatchesTask(
         ensureSuccess(gitCmd("fetch", "origin", dir = projectDir))
         ensureSuccess(gitCmd("reset", "--hard", "origin/master", dir = projectDir))
       } else {
-        ensureSuccess(gitCmd("clone", sourceRepo.absolutePath, projectDir.absolutePath))
+        ensureSuccess(gitCmd("clone", sourceRepo.absolutePath, projectDir.absolutePath, dir = project.rootProjectDir))
       }
       logger.lifecycle(">>> Done resetting subproject $name")
 

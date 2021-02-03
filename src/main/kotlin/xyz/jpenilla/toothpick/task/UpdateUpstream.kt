@@ -23,24 +23,16 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
-import xyz.jpenilla.toothpick.rootProjectDir
-import xyz.jpenilla.toothpick.taskGroup
-import xyz.jpenilla.toothpick.toothpick
-import xyz.jpenilla.toothpick.upstreamDir
 
-internal fun Project.createUpdateUpstreamTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("updateUpstream") {
-  receiver(this)
-  group = taskGroup
-  doLast {
-    ensureSuccess(gitCmd("fetch", dir = upstreamDir, printOut = true))
-    ensureSuccess(gitCmd("reset", "--hard", toothpick.upstreamBranch, dir = upstreamDir, printOut = true))
-    ensureSuccess(gitCmd("add", toothpick.upstream, dir = rootProjectDir, printOut = true))
-    ensureSuccess(gitCmd("submodule", "update", "--init", "--recursive", dir = upstreamDir, printOut = true))
+public open class UpdateUpstream : ToothpickTask() {
+  @TaskAction
+  private fun updateUpstream() {
+    ensureSuccess(gitCmd("fetch", dir = toothpick.upstreamDir, printOut = true))
+    ensureSuccess(gitCmd("reset", "--hard", toothpick.upstreamBranch, dir = toothpick.upstreamDir, printOut = true))
+    ensureSuccess(gitCmd("add", toothpick.upstream, dir = toothpick.project.projectDir, printOut = true))
+    ensureSuccess(gitCmd("submodule", "update", "--init", "--recursive", dir = toothpick.upstreamDir, printOut = true))
   }
 }

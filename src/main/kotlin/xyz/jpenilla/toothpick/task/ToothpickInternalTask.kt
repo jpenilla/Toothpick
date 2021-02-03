@@ -23,27 +23,10 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.tasks.TaskAction
-import xyz.jpenilla.toothpick.ensureSuccess
-import xyz.jpenilla.toothpick.gitCmd
+import xyz.jpenilla.toothpick.internalTaskGroup
 
-public open class UpstreamCommit : ToothpickTask() {
-  @TaskAction
-  private fun upstreamCommit() {
-    val oldRev = ensureSuccess(gitCmd("ls-tree", "HEAD", toothpick.upstream, dir = project.projectDir))
-      ?.substringAfter("commit ")?.substringBefore("\t")
-    val gitChangelog =
-      ensureSuccess(gitCmd("log", "--oneline", "$oldRev...HEAD", printOut = true, dir = toothpick.upstreamDir)) {
-        logger.lifecycle("No upstream changes to commit?")
-      }
-    val commitMessage = """
-                    |Updated Upstream (${toothpick.upstream})
-                    |
-                    |Upstream has released updates that appear to apply and compile correctly
-                    |
-                    |${toothpick.upstream} Changes:
-                    |$gitChangelog
-                """.trimMargin()
-    ensureSuccess(gitCmd("commit", "-m", commitMessage, printOut = true, dir = project.projectDir))
+public open class ToothpickInternalTask : ToothpickTask() {
+  init {
+    group = internalTaskGroup
   }
 }

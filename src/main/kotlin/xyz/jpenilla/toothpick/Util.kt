@@ -24,6 +24,7 @@
 package xyz.jpenilla.toothpick
 
 import org.gradle.api.Project
+import org.gradle.api.logging.Logging
 import java.io.File
 import java.util.LinkedList
 import kotlin.streams.asSequence
@@ -34,6 +35,20 @@ public fun Project.cmd(
   vararg args: String,
   dir: File = rootProject.projectDir,
   printOut: Boolean = false
+): CmdResult =
+  cmdImpl(*args, dir = dir, printOut = printOut)
+
+public fun cmd(
+  vararg args: String,
+  dir: File,
+  printOut: Boolean = false
+): CmdResult =
+  cmdImpl(*args, dir = dir, printOut = printOut)
+
+private fun cmdImpl(
+  vararg args: String,
+  dir: File,
+  printOut: Boolean = false
 ): CmdResult {
   val process = ProcessBuilder()
     .command(*args)
@@ -41,6 +56,7 @@ public fun Project.cmd(
     .directory(dir)
     .start()
   val output = process.inputStream.bufferedReader().use { reader ->
+    val logger = Logging.getLogger(Toothpick::class.java)
     reader.lines().asSequence()
       .onEach {
         if (printOut) {
@@ -75,9 +91,23 @@ public fun Project.gitCmd(
 ): CmdResult =
   cmd("git", *args, dir = dir, printOut = printOut)
 
+public fun gitCmd(
+  vararg args: String,
+  dir: File,
+  printOut: Boolean = false
+): CmdResult =
+  cmd("git", *args, dir = dir, printOut = printOut)
+
 public fun Project.bashCmd(
   vararg args: String,
   dir: File = rootProject.projectDir,
+  printOut: Boolean = false
+): CmdResult =
+  cmd("bash", "-c", *args, dir = dir, printOut = printOut)
+
+public fun bashCmd(
+  vararg args: String,
+  dir: File,
   printOut: Boolean = false
 ): CmdResult =
   cmd("bash", "-c", *args, dir = dir, printOut = printOut)
@@ -92,10 +122,10 @@ internal fun String.applyReplacements(
   return result
 }
 
-private fun Project.gitSigningEnabled(repo: File): Boolean =
+private fun gitSigningEnabled(repo: File): Boolean =
   gitCmd("config", "commit.gpgsign", dir = repo).output?.toBoolean() == true
 
-internal fun Project.temporarilyDisableGitSigning(repo: File): Boolean {
+internal fun temporarilyDisableGitSigning(repo: File): Boolean {
   val isCurrentlyEnabled = gitSigningEnabled(repo)
   if (isCurrentlyEnabled) {
     gitCmd("config", "commit.gpgsign", "false", dir = repo)
@@ -103,11 +133,11 @@ internal fun Project.temporarilyDisableGitSigning(repo: File): Boolean {
   return isCurrentlyEnabled
 }
 
-internal fun Project.reEnableGitSigning(repo: File) {
+internal fun reEnableGitSigning(repo: File) {
   gitCmd("config", "commit.gpgsign", "true", dir = repo)
 }
 
-internal fun Project.gitHash(repo: File): String =
+internal fun gitHash(repo: File): String =
   gitCmd("rev-parse", "HEAD", dir = repo).output ?: ""
 
 internal val jenkins = System.getenv("JOB_NAME") != null

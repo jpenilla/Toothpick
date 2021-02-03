@@ -23,21 +23,14 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.bashCmd
 import xyz.jpenilla.toothpick.gitHash
-import xyz.jpenilla.toothpick.lastUpstream
-import xyz.jpenilla.toothpick.taskGroup
-import xyz.jpenilla.toothpick.toothpick
-import xyz.jpenilla.toothpick.upstreamDir
 
-internal fun Project.createSetupUpstreamTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("setupUpstream") {
-  receiver(this)
-  group = taskGroup
-  doLast {
+public open class SetupUpstream : ToothpickTask() {
+  @TaskAction
+  private fun setupUpstream() {
+    val upstreamDir = toothpick.upstreamDir
     val setupUpstreamCommand = if (upstreamDir.resolve(toothpick.upstreamLowercase).exists()) {
       "./${toothpick.upstreamLowercase} patch"
     } else if (
@@ -53,6 +46,6 @@ internal fun Project.createSetupUpstreamTask(
     if (result.exitCode != 0) {
       error("Failed to apply upstream patches: script exited with code ${result.exitCode}")
     }
-    lastUpstream.writeText(gitHash(upstreamDir))
+    toothpick.lastUpstream.writeText(gitHash(upstreamDir))
   }
 }

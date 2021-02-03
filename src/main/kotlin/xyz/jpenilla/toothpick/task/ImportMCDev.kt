@@ -27,12 +27,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
-import xyz.jpenilla.toothpick.internalTaskGroup
-import xyz.jpenilla.toothpick.toothpick
 
 private val json = Json { prettyPrint = true }
 
@@ -45,36 +42,33 @@ private data class ImportsContainer(
 @Serializable
 private data class LibraryImport(val group: String, val library: String, val prefix: String, val file: String)
 
-internal fun Project.createImportMCDevTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("importMCDev") {
-  receiver(this)
-  group = internalTaskGroup
-  val upstreamServer = toothpick.serverProject.baseDir
-  val importLog = arrayListOf("Extra mc-dev imports")
+public open class ImportMCDev : ToothpickInternalTask() {
+  private val upstreamServer = toothpick.serverProject.baseDir
+  private val importLog = arrayListOf("Extra mc-dev imports")
 
-  fun importNMS(className: String) {
+  private fun importNMS(className: String) {
     logger.lifecycle("Importing n.m.s.$className")
-    importLog.add("Imported n.m.s.$className")
     val source = toothpick.paperWorkDir.resolve("spigot/net/minecraft/server/$className.java")
     if (!source.exists()) error("Missing NMS: $className")
     val target = upstreamServer.resolve("src/main/java/net/minecraft/server/$className.java")
     source.copyTo(target)
+    importLog.add("Imported n.m.s.$className")
   }
 
-  fun importLibrary(import: LibraryImport) {
+  private fun importLibrary(import: LibraryImport) {
     val (group, lib, prefix, file) = import
     logger.lifecycle("Importing $group.$lib $prefix/$file")
-    importLog.add("Imported $group.$lib $prefix/$file")
     val source = toothpick.paperWorkDir.resolve("libraries/$group/$lib/$prefix/$file.java")
     if (!source.exists()) error("Missing Base: $lib $prefix/$file")
     val targetDir = upstreamServer.resolve("src/main/java/$prefix")
     val target = targetDir.resolve("$file.java")
     targetDir.mkdirs()
     source.copyTo(target)
+    importLog.add("Imported $group.$lib $prefix/$file")
   }
 
-  doLast {
+  @TaskAction
+  private fun importMCDev() {
     logger.lifecycle(">>> Importing mc-dev")
     val lastCommitIsMCDev = gitCmd(
       "log", "-1", "--oneline",
@@ -102,7 +96,7 @@ internal fun Project.createImportMCDevTask(
       .forEach(::importNMS)
 
     // Imports from mcdevimports.json
-    val importsFile = projectDir.resolve("mcdevimports.json")
+    val importsFile = toothpick.project.projectDir.resolve("mcdevimports.json")
     if (!importsFile.exists()) {
       importsFile.writeText(json.encodeToString(ImportsContainer()))
     }

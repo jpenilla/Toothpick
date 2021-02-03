@@ -34,7 +34,7 @@ public class ToothpickSubproject {
     val name = project.name
     val upstream = project.toothpick.upstream
     val suffix = if (name.endsWith("server")) "Server" else "API"
-    project.upstreamDir.resolve("$upstream-$suffix")
+    project.toothpick.upstreamDir.resolve("$upstream-$suffix")
   }
 
   public val projectDir: File

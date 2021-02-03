@@ -41,11 +41,5 @@ public fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
   initToothpickTasks()
 }
 
-internal val Project.lastUpstream: File
-  get() = rootProject.projectDir.resolve("last-${toothpick.upstreamLowercase}")
-
 internal val Project.rootProjectDir: File
   get() = rootProject.projectDir
-
-internal val Project.upstreamDir: File
-  get() = rootProject.projectDir.resolve(toothpick.upstream)

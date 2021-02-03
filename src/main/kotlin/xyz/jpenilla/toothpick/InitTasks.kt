@@ -26,17 +26,17 @@ package xyz.jpenilla.toothpick
 import org.gradle.api.Project
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
-import xyz.jpenilla.toothpick.task.createApplyPatchesTask
-import xyz.jpenilla.toothpick.task.createImportMCDevTask
-import xyz.jpenilla.toothpick.task.createInitGitSubmodulesTask
-import xyz.jpenilla.toothpick.task.createPaperclipTask
-import xyz.jpenilla.toothpick.task.createRebuildPatchesTask
-import xyz.jpenilla.toothpick.task.createSetupUpstreamTask
-import xyz.jpenilla.toothpick.task.createUpdateUpstreamTask
-import xyz.jpenilla.toothpick.task.createUpstreamCommitTask
+import xyz.jpenilla.toothpick.task.ApplyPatches
+import xyz.jpenilla.toothpick.task.ImportMCDev
+import xyz.jpenilla.toothpick.task.InitGitSubmodules
+import xyz.jpenilla.toothpick.task.Paperclip
+import xyz.jpenilla.toothpick.task.RebuildPatches
+import xyz.jpenilla.toothpick.task.SetupUpstream
+import xyz.jpenilla.toothpick.task.UpdateUpstream
+import xyz.jpenilla.toothpick.task.UpstreamCommit
 
-@Suppress("UNUSED_VARIABLE")
 internal fun Project.initToothpickTasks() {
   gradle.taskGraph.whenReady {
     val fast = project.hasProperty("fast")
@@ -51,47 +51,51 @@ internal fun Project.initToothpickTasks() {
   tasks.getByName("build") {
     doFirst {
       val readyToBuild =
-        upstreamDir.resolve(".git").exists()
+        toothpick.upstreamDir.resolve(".git").exists()
           && toothpick.subprojects.values.all { it.projectDir.exists() && it.baseDir.exists() }
       if (!readyToBuild) {
-        error("Workspace has not been setup. Try running `./gradlew applyPatches` first")
+        error("Workspace has not been setup. Try running './gradlew applyPatches' first")
       }
     }
   }
 
-  val initGitSubmodules = createInitGitSubmodulesTask()
+  val initGitSubmodules = tasks.register<InitGitSubmodules>("initGitSubmodules")
 
-  val setupUpstream = createSetupUpstreamTask {
-    dependsOn(initGitSubmodules)
+  val setupUpstream = tasks.register<SetupUpstream>("setupUpstream") {
+    if (!toothpick.upstreamDir.resolve(".git").exists()) {
+      dependsOn(initGitSubmodules)
+    }
   }
 
-  val importMCDev = createImportMCDevTask {
+  val importMCDev = tasks.register<ImportMCDev>("importMCDev") {
     mustRunAfter(setupUpstream)
   }
 
-  val paperclip = createPaperclipTask {
+  tasks.register<Paperclip>("paperclip") {
     val shadowJar = toothpick.serverProject.project.tasks.getByName("shadowJar")
     dependsOn(shadowJar)
-    inputs.file(shadowJar.outputs.files.singleFile)
+    patchedJar = shadowJar.outputs.files.singleFile
   }
 
-  val applyPatches = createApplyPatchesTask {
+  tasks.register<ApplyPatches>("applyPatches") {
     // If Paper has not been setup yet or if we modified the submodule (i.e. upstream update), patch
-    if (!lastUpstream.exists()
-      || !upstreamDir.resolve(".git").exists()
-      || lastUpstream.readText() != gitHash(upstreamDir)
-    ) {
-      dependsOn(setupUpstream)
+    with(toothpick) {
+      if (!lastUpstream.exists()
+        || !upstreamDir.resolve(".git").exists()
+        || lastUpstream.readText() != gitHash(upstreamDir)
+      ) {
+        dependsOn(setupUpstream)
+      }
     }
     mustRunAfter(setupUpstream)
     dependsOn(importMCDev)
   }
 
-  val rebuildPatches = createRebuildPatchesTask()
+  tasks.register<RebuildPatches>("rebuildPatches")
 
-  val updateUpstream = createUpdateUpstreamTask {
+  tasks.register<UpdateUpstream>("updateUpstream") {
     finalizedBy(setupUpstream)
   }
 
-  val upstreamCommit = createUpstreamCommitTask()
+  tasks.register<UpstreamCommit>("upstreamCommit")
 }

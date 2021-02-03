@@ -23,22 +23,15 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
-import xyz.jpenilla.toothpick.taskGroup
-import xyz.jpenilla.toothpick.toothpick
 
-@Suppress("UNUSED_VARIABLE")
-internal fun Project.createRebuildPatchesTask(
-  receiver: Task.() -> Unit = {}
-): Task = tasks.create("rebuildPatches") {
-  receiver(this)
-  group = taskGroup
-  doLast {
-    for ((name, subproject) in toothpick.subprojects) {
-      val (sourceRepo, projectDir, patchesDir) = subproject
+public open class RebuildPatches : ToothpickTask() {
+  @TaskAction
+  private fun rebuildPatches() {
+    toothpick.subprojects.forEach { (name, subproject) ->
+      val (_, projectDir, patchesDir) = subproject
 
       if (!patchesDir.exists()) {
         patchesDir.mkdirs()

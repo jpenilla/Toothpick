@@ -1,15 +1,12 @@
-val kotlinxDomVersion = "0.0.10"
-val shadowVersion = "6.1.0"
-
-group = "xyz.jpenilla"
-version = "1.0.0-SNAPSHOT"
-
 plugins {
   `maven-publish`
   `kotlin-dsl`
   kotlin("plugin.serialization") version "1.4.20"
-  id("net.kyori.indra.license-header") version "1.2.1"
+  id("net.kyori.indra.license-header") version "1.3.0"
 }
+
+group = "xyz.jpenilla"
+version = "1.0.0-SNAPSHOT"
 
 repositories {
   mavenCentral()
@@ -19,8 +16,8 @@ repositories {
 
 dependencies {
   implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.0.1")
-  implementation("org.jetbrains.kotlinx", "kotlinx.dom", kotlinxDomVersion)
-  implementation("com.github.jengelman.gradle.plugins", "shadow", shadowVersion)
+  implementation("org.jetbrains.kotlinx", "kotlinx.dom", "0.0.10")
+  implementation("com.github.jengelman.gradle.plugins", "shadow", "6.1.0")
 }
 
 java {
