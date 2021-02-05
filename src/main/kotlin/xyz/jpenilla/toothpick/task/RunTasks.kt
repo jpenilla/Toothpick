@@ -56,6 +56,7 @@ internal fun Project.registerRunTasks() {
       .sourceSets.getByName("main").runtimeClasspath
     main = "org.bukkit.craftbukkit.Main"
     args = listOf("nogui")
+    systemProperty("disable.watchdog", true)
     doFirst {
       if (!workingDir.exists()) workingDir.mkdir()
     }
