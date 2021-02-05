@@ -23,8 +23,11 @@
  */
 package xyz.jpenilla.toothpick
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.getByName
 import java.io.File
 
 public val Project.toothpick: ToothpickExtension
@@ -43,3 +46,6 @@ public fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
 
 internal val Project.rootProjectDir: File
   get() = rootProject.projectDir
+
+internal val TaskContainer.shadowJar: ShadowJar
+  get() = getByName("shadowJar", ShadowJar::class)

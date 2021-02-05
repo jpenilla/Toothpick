@@ -36,6 +36,7 @@ import xyz.jpenilla.toothpick.task.RebuildPatches
 import xyz.jpenilla.toothpick.task.SetupUpstream
 import xyz.jpenilla.toothpick.task.UpdateUpstream
 import xyz.jpenilla.toothpick.task.UpstreamCommit
+import xyz.jpenilla.toothpick.task.registerRunTasks
 
 internal fun Project.initToothpickTasks() {
   gradle.taskGraph.whenReady {
@@ -72,7 +73,7 @@ internal fun Project.initToothpickTasks() {
   }
 
   tasks.register<Paperclip>("paperclip") {
-    val shadowJar = toothpick.serverProject.project.tasks.getByName("shadowJar")
+    val shadowJar = toothpick.serverProject.project.tasks.shadowJar
     dependsOn(shadowJar)
     patchedJar = shadowJar.outputs.files.singleFile
   }
@@ -98,4 +99,6 @@ internal fun Project.initToothpickTasks() {
   }
 
   tasks.register<UpstreamCommit>("upstreamCommit")
+
+  registerRunTasks()
 }

@@ -48,9 +48,9 @@ import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.withType
-import java.nio.charset.StandardCharsets.UTF_8
 import java.text.SimpleDateFormat
 import java.util.Date
+import kotlin.text.Charsets.UTF_8
 
 internal fun Project.configureSubprojects() {
   subprojects {
