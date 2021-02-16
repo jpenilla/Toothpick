@@ -51,6 +51,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
     val source = toothpick.paperWorkDir.resolve("spigot/net/minecraft/server/$className.java")
     if (!source.exists()) error("Missing NMS: $className")
     val target = upstreamServer.resolve("src/main/java/net/minecraft/server/$className.java")
+    if (target.exists()) return
     source.copyTo(target)
     importLog.add("Imported n.m.s.$className")
   }
