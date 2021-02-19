@@ -90,12 +90,22 @@ public open class ToothpickExtension(objects: ObjectFactory) {
     get() = paperDir.resolve("work/Minecraft/${minecraftVersion}")
 
   internal val mavenCommand: String by lazy {
-    if (cmd("mvn", "-v", dir = project.projectDir).exitCode == 0) {
+    if (exitsSuccessfully("mvn", "-v")) {
       return@lazy "mvn"
     }
-    if (cmd("mvn.cmd", "-v", dir = project.projectDir).exitCode == 0) {
+    if (exitsSuccessfully("mvn.cmd", "-v")) {
       return@lazy "mvn.cmd"
     }
     error("Unable to locate maven. Please ensure you have maven installed and on your path.")
+  }
+
+  private fun exitsSuccessfully(vararg args: String): Boolean {
+    try {
+      if (cmd(*args, dir = project.projectDir).exitCode == 0) {
+        return true
+      }
+    } catch (_: Exception) {
+    }
+    return false
   }
 }
