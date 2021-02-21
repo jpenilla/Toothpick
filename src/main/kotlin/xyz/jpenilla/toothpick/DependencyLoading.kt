@@ -77,10 +77,14 @@ public fun DependencyHandlerScope.loadDependencies(project: Project) {
     }
 
     when (scope) {
-      "compile", null -> add("api", dependencyString)
+      "compile", null -> {
+        add("api", dependencyString)
+        add("annotationProcessor", dependencyString)
+      }
       "provided" -> {
         add("compileOnly", dependencyString)
         add("testImplementation", dependencyString)
+        add("annotationProcessor", dependencyString)
       }
       "runtime" -> add("runtimeOnly", dependencyString)
       "test" -> add("testImplementation", dependencyString)
