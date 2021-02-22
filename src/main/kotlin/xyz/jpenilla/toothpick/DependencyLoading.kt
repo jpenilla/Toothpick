@@ -86,7 +86,9 @@ private fun DependencyHandlerScope.loadDependencies(project: Project, dependenci
       "import" -> add("api", platform(dependencyString))
       "compile", null -> {
         add("api", dependencyString)
-        add("annotationProcessor", dependencyString)
+        if (version != null) {
+          add("annotationProcessor", dependencyString)
+        }
       }
       "provided" -> {
         add("compileOnly", dependencyString)
