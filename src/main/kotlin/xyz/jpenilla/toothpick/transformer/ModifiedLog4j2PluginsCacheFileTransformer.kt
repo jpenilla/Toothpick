@@ -43,8 +43,8 @@ import java.util.Enumeration
  * Besides converting to Kotlin, the only modified part of the class is [canTransformResource].
  */
 internal class ModifiedLog4j2PluginsCacheFileTransformer : Transformer {
-  private val temporaryFiles: ArrayList<File> = ArrayList()
-  private val relocators: ArrayList<Relocator> = ArrayList()
+  private val temporaryFiles = ArrayList<File>()
+  private val relocators = ArrayList<Relocator>()
   private lateinit var stats: ShadowStats
 
   override fun canTransformResource(element: FileTreeElement): Boolean {

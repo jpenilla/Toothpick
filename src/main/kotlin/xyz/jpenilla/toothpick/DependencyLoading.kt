@@ -31,6 +31,7 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.project
+import org.w3c.dom.Element
 
 public fun RepositoryHandler.loadRepositories(project: Project) {
   val pomFile = project.projectDir.resolve("pom.xml")
@@ -50,33 +51,40 @@ public fun DependencyHandlerScope.loadDependencies(project: Project) {
   if (!pomFile.exists()) return
   val dom = parseXml(pomFile)
 
-  val dependenciesBlock = dom.search("dependencies").firstOrNull() ?: return
-
   // Load dependencies
+  dom.search("dependencies").forEach {
+    loadDependencies(project, it)
+  }
+}
+
+private fun DependencyHandlerScope.loadDependencies(project: Project, dependenciesBlock: Element) {
   dependenciesBlock.elements("dependency").forEach { dependencyElem ->
     val groupId = dependencyElem.search("groupId").first().textContent
     val artifactId = dependencyElem.search("artifactId").first().textContent
-    val version = dependencyElem.search("version").first().textContent.applyReplacements(
+    val version = dependencyElem.search("version").firstOrNull()?.textContent?.applyReplacements(
       "project.version" to project.version.toString(),
       "minecraft.version" to project.toothpick.minecraftVersion
     )
     val scope = dependencyElem.search("scope").firstOrNull()?.textContent
     val classifier = dependencyElem.search("classifier").firstOrNull()?.textContent
 
-    val dependencyString = "${groupId}:${artifactId}:${version}${classifier?.run { ":$this" } ?: ""}"
-    project.logger.debug("Read dependency '{}' from '{}'", dependencyString, pomFile.absolutePath)
+    val dependencyString =
+      "$groupId:$artifactId${processOptionalDependencyElement(version)}${processOptionalDependencyElement(classifier)}"
+    project.logger.debug("Read $scope scope dependency '$dependencyString' from '${project.name}' pom.xml")
+    println(dependencyString)
 
     // Special case API
-    if (artifactId == "${project.toothpick.forkNameLowercase}-api"
+    if (artifactId == project.toothpick.apiProject.project.name
       || artifactId == "${project.toothpick.upstreamLowercase}-api"
     ) {
-      if (project.name.endsWith("-server")) {
+      if (project == project.toothpick.serverProject.project) {
         add("api", project(":${project.toothpick.forkNameLowercase}-api"))
       }
       return@forEach
     }
 
     when (scope) {
+      "import" -> add("api", platform(dependencyString))
       "compile", null -> {
         add("api", dependencyString)
         add("annotationProcessor", dependencyString)
@@ -91,3 +99,6 @@ public fun DependencyHandlerScope.loadDependencies(project: Project) {
     }
   }
 }
+
+private fun processOptionalDependencyElement(element: String?): String =
+  element?.run { ":$this" } ?: ""
