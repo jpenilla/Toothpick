@@ -25,7 +25,6 @@ package xyz.jpenilla.toothpick
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
 import kotlinx.dom.elements
 import kotlinx.dom.parseXml
 import kotlinx.dom.search
@@ -48,6 +47,7 @@ import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.withType
+import xyz.jpenilla.toothpick.transformer.ModifiedLog4j2PluginsCacheFileTransformer
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.text.Charsets.UTF_8
@@ -100,7 +100,8 @@ private fun Project.configureServerProject() {
   val shadowJar by tasks.getting(ShadowJar::class) {
     archiveClassifier.set("") // ShadowJar is the main server artifact
     dependsOn(generatePomFileForMavenJavaPublication)
-    transform(Log4j2PluginsCacheFileTransformer::class.java)
+    transform(ModifiedLog4j2PluginsCacheFileTransformer::class.java)
+    //transform(Log4j2PluginsCacheFileTransformer::class.java)
     mergeServiceFiles()
     manifest {
       attributes(

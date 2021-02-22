@@ -1,3 +1,5 @@
+import org.cadixdev.gradle.licenser.LicenseExtension
+
 plugins {
   `maven-publish`
   `kotlin-dsl`
@@ -67,6 +69,10 @@ extensions.getByType<PublishingExtension>().publications.withType<MavenPublicati
       }
     }
   }
+}
+
+extensions.configure<LicenseExtension> {
+  exclude("**/ModifiedLog4j2PluginsCacheFileTransformer.kt")
 }
 
 publishing.repositories.maven {
