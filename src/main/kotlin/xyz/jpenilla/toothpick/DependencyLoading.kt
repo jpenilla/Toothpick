@@ -71,7 +71,6 @@ private fun DependencyHandlerScope.loadDependencies(project: Project, dependenci
     val dependencyString =
       "$groupId:$artifactId${processOptionalDependencyElement(version)}${processOptionalDependencyElement(classifier)}"
     project.logger.debug("Read $scope scope dependency '$dependencyString' from '${project.name}' pom.xml")
-    println(dependencyString)
 
     // Special case API
     if (artifactId == project.toothpick.apiProject.project.name
