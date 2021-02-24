@@ -52,7 +52,10 @@ public fun DependencyHandlerScope.loadDependencies(project: Project) {
   val dom = parseXml(pomFile)
 
   // Load dependencies
-  dom.search("dependencies").forEach {
+  dom.search("dependencies").filter {
+    it.parentNode.nodeName == "project"
+      || it.parentNode.nodeName == "dependencyManagement"
+  }.forEach {
     loadDependencies(project, it)
   }
 }
@@ -77,7 +80,7 @@ private fun DependencyHandlerScope.loadDependencies(project: Project, dependenci
       || artifactId == "${project.toothpick.upstreamLowercase}-api"
     ) {
       if (project == project.toothpick.serverProject.project) {
-        add("api", project(":${project.toothpick.forkNameLowercase}-api"))
+        add("api", project(":${project.toothpick.apiProject.project.name}"))
       }
       return@forEach
     }
