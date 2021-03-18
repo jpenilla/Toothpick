@@ -32,6 +32,13 @@ import xyz.jpenilla.toothpick.temporarilyDisableGitSigning
 import java.nio.file.Files
 
 public open class ApplyPatches : ToothpickTask() {
+  private val applyCommand = arrayListOf("am", "--3way", "--ignore-whitespace")
+
+  public fun applyCommand(vararg gitArguments: String) {
+    applyCommand.clear()
+    applyCommand.addAll(gitArguments)
+  }
+
   @TaskAction
   private fun applyPatches() {
     for ((name, subproject) in toothpick.subprojects) {
@@ -59,7 +66,9 @@ public open class ApplyPatches : ToothpickTask() {
 
       logger.lifecycle(">>> Applying patches to $name")
 
-      val gitCommand = arrayListOf("am", "--3way", "--ignore-whitespace", *patches)
+      val gitCommand = ArrayList<String>()
+      gitCommand.addAll(applyCommand)
+      gitCommand.addAll(patches)
       ensureSuccess(gitCmd(*gitCommand.toTypedArray(), dir = projectDir, printOut = true)) {
         if (wasGitSigningEnabled) reEnableGitSigning(projectDir)
       }
