@@ -29,10 +29,12 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import xyz.jpenilla.toothpick.task.ApplyPatches
+import xyz.jpenilla.toothpick.task.Clean
 import xyz.jpenilla.toothpick.task.ImportMCDev
 import xyz.jpenilla.toothpick.task.InitGitSubmodules
 import xyz.jpenilla.toothpick.task.Paperclip
 import xyz.jpenilla.toothpick.task.RebuildPatches
+import xyz.jpenilla.toothpick.task.RepackageNMS
 import xyz.jpenilla.toothpick.task.SetupUpstream
 import xyz.jpenilla.toothpick.task.UpdateUpstream
 import xyz.jpenilla.toothpick.task.UpstreamCommit
@@ -101,4 +103,18 @@ internal fun Project.initToothpickTasks() {
   tasks.register<UpstreamCommit>("upstreamCommit")
 
   registerRunTasks()
+
+  tasks.register<Clean>("cleanSubprojects") {
+    description = "Deletes the Server and API project folders. Warning! This is irreversible, and could cause you to lose work if used by mistake!"
+    clean(toothpick.apiProject.projectDir, toothpick.serverProject.projectDir)
+  }
+
+  tasks.register<Clean>("cleanToothpick") {
+    description = "Deletes the Server and API project folders, as well as the upstream folder. Warning! This is irreversible, and could cause you to lose work if used by mistake!"
+    clean(toothpick.apiProject.projectDir, toothpick.serverProject.projectDir, toothpick.upstreamDir)
+  }
+
+  tasks.register<RepackageNMS>("repackageNMS") {
+    description = "Fix patches for application after Spigot's repackaging of NMS."
+  }
 }

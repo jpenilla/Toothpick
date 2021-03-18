@@ -47,6 +47,7 @@ import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.withType
+import xyz.jpenilla.toothpick.relocation.ToothpickRelocator
 import xyz.jpenilla.toothpick.transformer.ModifiedLog4j2PluginsCacheFileTransformer
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -91,8 +92,7 @@ private fun Project.configureServerProject() {
     destination = project.buildDir.resolve("tmp/pom.xml")
   }
 
-  @Suppress("UNUSED_VARIABLE")
-  val test by tasks.getting(Test::class) {
+  tasks.withType<Test> {
     // didn't bother to look into why these fail. paper excludes them in paperweight as well though
     exclude("org/bukkit/craftbukkit/inventory/ItemStack*Test.class")
   }
@@ -101,7 +101,6 @@ private fun Project.configureServerProject() {
     archiveClassifier.set("") // ShadowJar is the main server artifact
     dependsOn(generatePomFileForMavenJavaPublication)
     transform(ModifiedLog4j2PluginsCacheFileTransformer::class.java)
-    //transform(Log4j2PluginsCacheFileTransformer::class.java)
     mergeServiceFiles()
     manifest {
       attributes(
@@ -123,7 +122,6 @@ private fun Project.configureServerProject() {
     relocate("org.bukkit.craftbukkit", "org.bukkit.craftbukkit.v${toothpick.nmsPackage}") {
       exclude("org.bukkit.craftbukkit.Main*")
     }
-    relocate("net.minecraft.server", "net.minecraft.server.v${toothpick.nmsPackage}")
 
     // Make sure we relocate deps the same as Paper et al.
     val pomFile = project.projectDir.resolve("pom.xml")
@@ -142,9 +140,17 @@ private fun Project.configureServerProject() {
         .elements("relocation").forEach { relocation ->
           val pattern = relocation.search("pattern").first().textContent
           val shadedPattern = relocation.search("shadedPattern").first().textContent
-          if (pattern != "org.bukkit.craftbukkit" && pattern != "net.minecraft.server") { // We handle these ourselves above
-            logger.debug("Imported relocation to server project shadowJar from ${pomFile.absolutePath}: $pattern to $shadedPattern")
-            relocate(pattern, shadedPattern)
+          val rawString = relocation.search("rawString").firstOrNull()?.textContent?.toBoolean() ?: false
+          if (pattern != "org.bukkit.craftbukkit") { // We handle cb ourselves
+            val excludes = if (rawString) listOf("net/minecraft/data/Main*") else emptyList()
+            relocate(
+              ToothpickRelocator(
+                pattern,
+                shadedPattern.replace("\${minecraft_version}", toothpick.nmsPackage),
+                rawString,
+                excludes = excludes
+              )
+            )
           }
         }
     }

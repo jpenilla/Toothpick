@@ -86,8 +86,11 @@ public open class ToothpickExtension(objects: ObjectFactory) {
   internal val lastUpstream: File
     get() = project.projectDir.resolve("last-${upstreamLowercase}")
 
-  internal val paperWorkDir: File
+  internal val paperDecompDir: File
     get() = paperDir.resolve("work/Minecraft/${minecraftVersion}")
+
+  internal val paperWorkDir: File
+    get() = paperDir.resolve("work")
 
   internal val mavenCommand: String by lazy {
     if (exitsSuccessfully("mvn", "-v")) {

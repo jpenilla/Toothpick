@@ -48,13 +48,15 @@ public fun cmd(
 private fun cmdImpl(
   vararg args: String,
   dir: File,
-  printOut: Boolean = false
+  printOut: Boolean = false,
+  environment: Map<String, String> = emptyMap()
 ): CmdResult {
-  val process = ProcessBuilder()
-    .command(*args)
-    .redirectErrorStream(true)
-    .directory(dir)
-    .start()
+  val process = ProcessBuilder().apply {
+    command(*args)
+    redirectErrorStream(true)
+    directory(dir)
+    environment().putAll(environment)
+  }.start()
   val output = process.inputStream.bufferedReader().use { reader ->
     val logger = Logging.getLogger(Toothpick::class.java)
     reader.lines().asSequence()
