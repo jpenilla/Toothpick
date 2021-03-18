@@ -1,5 +1,3 @@
-import org.cadixdev.gradle.licenser.LicenseExtension
-
 plugins {
   `maven-publish`
   `kotlin-dsl`
@@ -23,8 +21,8 @@ dependencies {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.toVersion(8)
+  targetCompatibility = JavaVersion.toVersion(8)
   withSourcesJar()
 }
 
@@ -69,10 +67,6 @@ extensions.getByType<PublishingExtension>().publications.withType<MavenPublicati
       }
     }
   }
-}
-
-extensions.configure<LicenseExtension> {
-  exclude("**/ModifiedLog4j2PluginsCacheFileTransformer.kt")
 }
 
 publishing.repositories.maven {
