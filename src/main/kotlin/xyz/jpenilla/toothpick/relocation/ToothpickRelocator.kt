@@ -28,14 +28,19 @@ import com.github.jengelman.gradle.plugins.shadow.relocation.SimpleRelocator
 import java.lang.reflect.Method
 import java.util.regex.Pattern
 
-internal class ToothpickRelocator(
-  pattern: String,
-  shadedPattern: String,
-  rawString: Boolean = false,
-  includes: List<String> = emptyList(),
-  excludes: List<String> = emptyList(),
-  private val simpleRelocator: SimpleRelocator = SimpleRelocator(pattern, shadedPattern, includes, excludes, rawString)
+internal class ToothpickRelocator private constructor(
+  private val simpleRelocator: SimpleRelocator
 ) : Relocator by simpleRelocator {
+  constructor(
+    pattern: String,
+    shadedPattern: String,
+    rawString: Boolean = false,
+    includes: List<String> = emptyList(),
+    excludes: List<String> = emptyList()
+  ) : this(
+    SimpleRelocator(pattern, shadedPattern, includes, excludes, rawString)
+  )
+
   override fun canRelocatePath(path: String): Boolean {
     // Respect includes/excludes for rawString too
     if (simpleRelocator.rawString) {
