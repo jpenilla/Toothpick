@@ -30,6 +30,9 @@ import kotlinx.serialization.json.Json
 import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
+import java.io.File
+import java.nio.file.Files
+import kotlin.streams.toList
 
 private val json = Json { prettyPrint = true }
 
@@ -47,24 +50,40 @@ public open class ImportMCDev : ToothpickInternalTask() {
   private val importLog = arrayListOf("Extra mc-dev imports")
 
   private fun importNMS(className: String) {
-    logger.lifecycle("Importing n.m.s.$className")
-    val source = toothpick.paperWorkDir.resolve("spigot/net/minecraft/server/$className.java")
+    logger.lifecycle("Importing $className")
+    val classPath = "${className.replace(".", "/")}.java"
+    val source = toothpick.paperDecompDir.resolve("spigot/$classPath")
     if (!source.exists()) error("Missing NMS: $className")
-    val target = upstreamServer.resolve("src/main/java/net/minecraft/server/$className.java")
+    val target = upstreamServer.resolve("src/main/java/$classPath")
+    if (isDuplicateImport(target, className)) return
+    target.parentFile.mkdirs()
     source.copyTo(target)
-    importLog.add("Imported n.m.s.$className")
+    importLog.add("Imported $className")
   }
 
   private fun importLibrary(import: LibraryImport) {
     val (group, lib, prefix, file) = import
-    logger.lifecycle("Importing $group.$lib $prefix/$file")
-    val source = toothpick.paperWorkDir.resolve("libraries/$group/$lib/$prefix/$file.java")
+    val className = "${prefix.replace("/", ".")}.$file"
+    logger.lifecycle("Importing $className from $group.$lib")
+    val source = toothpick.paperDecompDir.resolve("libraries/$group/$lib/$prefix/$file.java")
     if (!source.exists()) error("Missing Base: $lib $prefix/$file")
     val targetDir = upstreamServer.resolve("src/main/java/$prefix")
     val target = targetDir.resolve("$file.java")
+    if (isDuplicateImport(target, className)) return
     targetDir.mkdirs()
     source.copyTo(target)
-    importLog.add("Imported $group.$lib $prefix/$file")
+    importLog.add("Imported $className from $group.$lib")
+  }
+
+  private fun isDuplicateImport(target: File, className: String): Boolean {
+    if (!target.exists()) return false
+    val message =
+      "Skipped import for $className, a class with that name already exists in the source tree. Is there an extra entry in mcdevimports.json?"
+    project.gradle.taskGraph.allTasks.last().doLast {
+      logger.warn(message)
+    }
+    logger.warn(message)
+    return true
   }
 
   @TaskAction
@@ -80,19 +99,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
       )
     }
 
-    (toothpick.serverProject.patchesDir.listFiles() ?: error("No patches in server?")).asSequence()
-      .flatMap { it.readLines().asSequence() }
-      .filter { it.startsWith("+++ b/src/main/java/net/minecraft/server/") }
-      .distinct()
-      .map { it.substringAfter("/server/").substringBefore(".java") }
-      .filter { !upstreamServer.resolve("src/main/java/net/minecraft/server/$it.java").exists() }
-      .map { toothpick.paperWorkDir.resolve("spigot/net/minecraft/server/$it.java") }
-      .filter {
-        val exists = it.exists()
-        if (!it.exists()) logger.lifecycle("NMS ${it.nameWithoutExtension} is either missing, or is a new file added through a patch")
-        exists
-      }
-      .map { it.nameWithoutExtension }
+    findNeededImports(Files.list(toothpick.serverProject.patchesDir.toPath()).map { it.toFile() }.toList())
       .forEach(::importNMS)
 
     // Imports from mcdevimports.json
@@ -111,4 +118,22 @@ public open class ImportMCDev : ToothpickInternalTask() {
     }
     logger.lifecycle(">>> Done importing mc-dev")
   }
+
+  private fun findNeededImports(patches: List<File>): Set<String> = patches.asSequence()
+    .flatMap { it.readLines().asSequence() }
+    .filter { line ->
+      line.startsWith("+++ b/src/main/java/net/minecraft/")
+        || line.startsWith("+++ b/src/main/java/com/mojang/math/")
+    }
+    .distinct()
+    .map { it.substringAfter("+++ b/src/main/java/") }
+    .filter { !upstreamServer.resolve("src/main/java/$it").exists() }
+    .filter {
+      val sourceFile = toothpick.paperDecompDir.resolve("spigot/$it")
+      val exists = sourceFile.exists()
+      if (!sourceFile.exists()) logger.lifecycle("$it is either missing, or is a new file added through a patch")
+      exists
+    }
+    .map { it.replace("/", ".").substringBefore(".java") }
+    .toSet()
 }

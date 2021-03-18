@@ -21,19 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package xyz.jpenilla.toothpick.transformer
+package xyz.jpenilla.toothpick.task
 
-import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
-import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
-import org.gradle.api.file.FileTreeElement
-import shadow.org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor.PLUGIN_CACHE_FILE
+import org.gradle.api.tasks.TaskAction
+import java.io.File
 
-internal class ModifiedLog4j2PluginsCacheFileTransformer : Transformer by Log4j2PluginsCacheFileTransformer() {
-  /**
-   * For some reason we have a file with name matching simply 'Log4j2Plugins.dat' and not PLUGIN_CACHE_FILE.
-   * That file also needs to be merged.
-   */
-  override fun canTransformResource(element: FileTreeElement): Boolean {
-    return PLUGIN_CACHE_FILE == element.name || element.name == "Log4j2Plugins.dat"
+public open class Clean : ToothpickTask() {
+  private val directoriesToClean = HashSet<File>()
+
+  public fun clean(vararg directories: File) {
+    directoriesToClean.addAll(directories)
+  }
+
+  @TaskAction
+  private fun clean() {
+    directoriesToClean.forEach { it.deleteOrNotify() }
+  }
+
+  private fun File.deleteOrNotify() {
+    logger.lifecycle("Deleting $path...")
+    val success = deleteRecursively()
+    if (success) {
+      logger.lifecycle("Successfully deleted $path.")
+    } else {
+      logger.lifecycle("Failed to delete $path.")
+    }
   }
 }
