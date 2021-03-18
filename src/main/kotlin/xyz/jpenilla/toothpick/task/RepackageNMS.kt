@@ -25,15 +25,20 @@ package xyz.jpenilla.toothpick.task
 
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.net.URL
 
 public open class RepackageNMS : ToothpickTask() {
   @TaskAction
   private fun repackage() {
+    logger.lifecycle("Downloading class mappings from spigot...")
+    val mappingsFileText = URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.16.5-cl.csrg?at=80d35549ec67b87a0cdf0d897abbe826ba34ac27").readText()
+    logger.lifecycle("Done downloading class mappings.")
+
     logger.lifecycle(">>> Preparing patches for NMS repackage")
-    val classMappingsFile = toothpick.paperWorkDir.resolve("BuildData/mappings/bukkit-1.16.5-cl.csrg")
-    val mappings = classMappingsFile.readLines()
+    val mappings = mappingsFileText
+      .split("\n")
       .asSequence()
-      .filter { !it.startsWith("#") && !it.contains("$") }
+      .filter { !it.startsWith("#") && !it.contains("$") && it.trim().isNotEmpty() }
       .map { it.split(" ")[1].replace("/", ".") }
       .map { Mapping(it) }
       .filter { it.newFQName != it.oldFQName }
