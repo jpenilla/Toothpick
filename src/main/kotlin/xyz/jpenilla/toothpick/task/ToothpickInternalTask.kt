@@ -23,10 +23,10 @@
  */
 package xyz.jpenilla.toothpick.task
 
-import xyz.jpenilla.toothpick.internalTaskGroup
+import xyz.jpenilla.toothpick.Constants
 
 public open class ToothpickInternalTask : ToothpickTask() {
   init {
-    group = internalTaskGroup
+    group = Constants.INTERNAL_TASK_GROUP
   }
 }

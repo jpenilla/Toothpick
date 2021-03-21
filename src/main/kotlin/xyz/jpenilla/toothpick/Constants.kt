@@ -23,5 +23,39 @@
  */
 package xyz.jpenilla.toothpick
 
-internal const val taskGroup = "toothpick"
-internal const val internalTaskGroup = "toothpick_internal"
+internal object Constants {
+  const val TASK_GROUP = "toothpick"
+  const val INTERNAL_TASK_GROUP = "toothpick_internal"
+
+  const val IMPORTS_CONFIGURATION_HEADER: String =
+    "Extra mc-dev imports. Configure extra sources to import from NMS or decompiled libraries."
+
+  const val NMS_IMPORTS_COMMENT: String = """Example nms-imports
+
+nms-imports=[
+    "com.mojang.math.Quaternion",
+    "net.minecraft.network.syncher.DataWatcherRegistry",
+    "net.minecraft.network.chat.IChatMutableComponent",
+    "net.minecraft.network.protocol.game.PacketPlayOutAdvancements",
+    "net.minecraft.world.entity.ai.goal.PathfinderGoalFishSchool",
+    "net.minecraft.world.level.levelgen.feature.WorldGenFlowers"
+]"""
+
+  const val LIBRARY_IMPORTS_COMMENT: String = """Example library-imports
+
+library-imports=[
+    {
+        file=Bicontravariant
+        group="com.mojang"
+        library=datafixerupper
+        prefix="com/mojang/datafixers/optics/profunctors"
+    },
+    {
+        file=CommandSyntaxException
+        group="com.mojang"
+        library=brigadier
+        prefix="com/mojang/brigadier/exceptions"
+    }
+]
+"""
+}

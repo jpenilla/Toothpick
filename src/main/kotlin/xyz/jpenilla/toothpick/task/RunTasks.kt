@@ -28,13 +28,13 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.register
+import xyz.jpenilla.toothpick.Constants
 import xyz.jpenilla.toothpick.shadowJar
-import xyz.jpenilla.toothpick.taskGroup
 import xyz.jpenilla.toothpick.toothpick
 
 internal fun Project.registerRunTasks() {
   tasks.register<Exec>("runServer") {
-    group = taskGroup
+    group = Constants.TASK_GROUP
     description = "Spin up a test server"
     workingDir = projectDir.resolve("run")
     standardInput = System.`in`
@@ -48,7 +48,7 @@ internal fun Project.registerRunTasks() {
   }
 
   tasks.register<JavaExec>("runDevServer") {
-    group = taskGroup
+    group = Constants.TASK_GROUP
     description = "Spin up a non-relocated test server"
     workingDir = projectDir.resolve("run")
     standardInput = System.`in`

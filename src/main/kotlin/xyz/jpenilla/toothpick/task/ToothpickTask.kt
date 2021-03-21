@@ -25,13 +25,13 @@ package xyz.jpenilla.toothpick.task
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
+import xyz.jpenilla.toothpick.Constants
 import xyz.jpenilla.toothpick.ToothpickExtension
-import xyz.jpenilla.toothpick.taskGroup
 import xyz.jpenilla.toothpick.toothpick
 
 public open class ToothpickTask : DefaultTask() {
   init {
-    group = taskGroup
+    group = Constants.TASK_GROUP
   }
 
   protected val toothpick: ToothpickExtension

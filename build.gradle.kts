@@ -15,7 +15,8 @@ repositories {
 }
 
 dependencies {
-  implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.0.1")
+  implementation("org.spongepowered", "configurate-hocon", "4.0.0")
+  implementation("org.spongepowered", "configurate-extra-kotlin", "4.0.0")
   implementation("org.jetbrains.kotlinx", "kotlinx.dom", "0.0.10")
   implementation("com.github.jengelman.gradle.plugins", "shadow", "6.1.0")
 }
