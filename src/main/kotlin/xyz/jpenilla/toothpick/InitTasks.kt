@@ -51,11 +51,11 @@ internal fun Project.initToothpickTasks() {
     }
   }
 
-  tasks.getByName("build") {
+  val build = tasks.getByName("build") {
     doFirst {
       val readyToBuild =
         toothpick.upstreamDir.resolve(".git").exists()
-          && toothpick.subprojects.values.all { it.projectDir.exists() && it.baseDir.exists() }
+          && toothpick.subprojects.all { it.projectDir.exists() && it.baseDir.exists() }
       if (!readyToBuild) {
         error("Workspace has not been setup. Try running './gradlew applyPatches' first")
       }
@@ -75,9 +75,11 @@ internal fun Project.initToothpickTasks() {
   }
 
   tasks.register<Paperclip>("paperclip") {
+    dependsOn(build)
+    dependsOn(toothpick.apiProject.project.tasks.getByName("build"))
+    dependsOn(toothpick.serverProject.project.tasks.getByName("build"))
     val shadowJar = toothpick.serverProject.project.tasks.shadowJar
-    dependsOn(shadowJar)
-    patchedJar = shadowJar.outputs.files.singleFile
+    patchedJar.set(shadowJar.archiveFile)
   }
 
   tasks.register<ApplyPatches>("applyPatches") {
@@ -97,6 +99,9 @@ internal fun Project.initToothpickTasks() {
   tasks.register<RebuildPatches>("rebuildPatches")
 
   tasks.register<UpdateUpstream>("updateUpstream") {
+    if (!toothpick.upstreamDir.resolve(".git").exists()) {
+      dependsOn(initGitSubmodules)
+    }
     finalizedBy(setupUpstream)
   }
 

@@ -24,13 +24,10 @@
 package xyz.jpenilla.toothpick
 
 import org.gradle.api.Project
-import org.gradle.api.model.ObjectFactory
 import java.io.File
 import java.util.Locale
 
-@Suppress("UNUSED_PARAMETER")
-public open class ToothpickExtension(objects: ObjectFactory) {
-  public lateinit var project: Project
+public open class ToothpickExtension(public val project: Project) {
   public lateinit var forkName: String
   public val forkNameLowercase: String
     get() = forkName.toLowerCase(Locale.ENGLISH)
@@ -52,22 +49,23 @@ public open class ToothpickExtension(objects: ObjectFactory) {
     } else "$field.jar"
 
   public lateinit var serverProject: ToothpickSubproject
-  public fun server(receiver: ToothpickSubproject.() -> Unit) {
-    serverProject = ToothpickSubproject()
-    receiver(serverProject)
-  }
+    private set
 
   public lateinit var apiProject: ToothpickSubproject
-  public fun api(receiver: ToothpickSubproject.() -> Unit) {
-    apiProject = ToothpickSubproject()
-    receiver(apiProject)
+    private set
+
+  public fun server(receiver: ToothpickSubproject.() -> Unit) {
+    if (::serverProject.isInitialized) error("Cannot initialize the server subproject a second time!")
+    serverProject = ToothpickSubproject().apply(receiver)
   }
 
-  public val subprojects: Map<String, ToothpickSubproject>
-    get() = if (::forkName.isInitialized) mapOf(
-      "$forkName-API" to apiProject,
-      "$forkName-Server" to serverProject
-    ) else emptyMap()
+  public fun api(receiver: ToothpickSubproject.() -> Unit) {
+    if (::apiProject.isInitialized) error("Cannot initialize the api subproject a second time!")
+    apiProject = ToothpickSubproject().apply(receiver)
+  }
+
+  public val subprojects: Set<ToothpickSubproject>
+    get() = if (::serverProject.isInitialized && ::apiProject.isInitialized) setOf(apiProject, serverProject) else emptySet()
 
   internal val upstreamDir: File
     get() = project.projectDir.resolve(upstream)
@@ -84,7 +82,7 @@ public open class ToothpickExtension(objects: ObjectFactory) {
   }
 
   internal val lastUpstream: File
-    get() = project.projectDir.resolve("last-${upstreamLowercase}")
+    get() = project.file("last-${upstreamLowercase}")
 
   internal val paperDecompDir: File
     get() = paperDir.resolve("work/Minecraft/${minecraftVersion}")
@@ -103,12 +101,10 @@ public open class ToothpickExtension(objects: ObjectFactory) {
   }
 
   private fun exitsSuccessfully(vararg args: String): Boolean {
-    try {
-      if (cmd(*args, dir = project.projectDir).exitCode == 0) {
-        return true
-      }
+    return try {
+      cmd(*args, dir = project.projectDir).exitCode == 0
     } catch (_: Exception) {
+      false
     }
-    return false
   }
 }

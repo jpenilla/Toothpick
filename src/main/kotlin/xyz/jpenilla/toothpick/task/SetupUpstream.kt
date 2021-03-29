@@ -26,22 +26,34 @@ package xyz.jpenilla.toothpick.task
 import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.bashCmd
 import xyz.jpenilla.toothpick.gitHash
+import java.io.File
 
 public open class SetupUpstream : ToothpickTask() {
   @TaskAction
   private fun setupUpstream() {
     val upstreamDir = toothpick.upstreamDir
-    val setupUpstreamCommand = if (upstreamDir.resolve(toothpick.upstreamLowercase).exists()) {
-      "./${toothpick.upstreamLowercase} patch"
+    if (upstreamDir.resolve(toothpick.upstreamLowercase).exists()) {
+      setupPaperOrBYOFUpstream(upstreamDir)
     } else if (
       upstreamDir.resolve("build.gradle.kts").exists()
       && upstreamDir.resolve("subprojects/server.gradle.kts").exists()
       && upstreamDir.resolve("subprojects/api.gradle.kts").exists()
     ) {
-      "./gradlew applyPatches"
+      setupToothpickUpstream(upstreamDir)
     } else {
       error("Don't know how to setup upstream!")
     }
+  }
+
+  private fun setupPaperOrBYOFUpstream(upstreamDir: File) {
+    runSetupUpstreamCommand("./${toothpick.upstreamLowercase} patch", upstreamDir)
+  }
+
+  private fun setupToothpickUpstream(upstreamDir: File) {
+    runSetupUpstreamCommand("./gradlew applyPatches", upstreamDir)
+  }
+
+  private fun runSetupUpstreamCommand(setupUpstreamCommand: String, upstreamDir: File) {
     val result = bashCmd(setupUpstreamCommand, dir = upstreamDir, printOut = true)
     if (result.exitCode != 0) {
       error("Failed to apply upstream patches: script exited with code ${result.exitCode}")

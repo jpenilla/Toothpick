@@ -30,8 +30,9 @@ import xyz.jpenilla.toothpick.gitCmd
 public open class RebuildPatches : ToothpickTask() {
   @TaskAction
   private fun rebuildPatches() {
-    toothpick.subprojects.forEach { (name, subproject) ->
+    toothpick.subprojects.forEach { subproject ->
       val (_, projectDir, patchesDir) = subproject
+      val name = projectDir.name
 
       if (!patchesDir.exists()) {
         patchesDir.mkdirs()

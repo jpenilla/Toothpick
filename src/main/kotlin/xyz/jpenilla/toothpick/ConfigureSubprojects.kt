@@ -30,6 +30,7 @@ import kotlinx.dom.parseXml
 import kotlinx.dom.search
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
@@ -53,34 +54,35 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.text.Charsets.UTF_8
 
-internal fun Project.configureSubprojects() {
-  subprojects {
-    apply<JavaLibraryPlugin>()
-    apply<MavenPublishPlugin>()
+internal fun ToothpickExtension.configureSubprojects() {
+  for (subproject in subprojects) {
+    subproject.project.commonSubprojectConfiguration()
+  }
+  serverProject.project.configureServerProject()
+  apiProject.project.configureApiProject()
+}
 
-    tasks.withType<JavaCompile> {
-      options.encoding = UTF_8.name()
-    }
-    tasks.withType<Javadoc> {
-      options.encoding = UTF_8.name()
-    }
+private fun Project.commonSubprojectConfiguration() {
+  apply<JavaLibraryPlugin>()
+  apply<MavenPublishPlugin>()
 
-    extensions.configure<PublishingExtension> {
-      publications {
-        create<MavenPublication>("mavenJava") {
-          groupId = rootProject.group as String
-          version = rootProject.version as String
-          pom {
-            name.set(project.name)
-            url.set(toothpick.forkUrl)
-          }
+  tasks.withType<JavaCompile> {
+    options.encoding = UTF_8.name()
+  }
+  tasks.withType<Javadoc> {
+    options.encoding = UTF_8.name()
+  }
+
+  extensions.configure<PublishingExtension> {
+    publications {
+      create<MavenPublication>("mavenJava") {
+        groupId = rootProject.group as String
+        version = rootProject.version as String
+        pom {
+          name.set(project.name)
+          url.set(toothpick.forkUrl)
         }
       }
-    }
-
-    when {
-      project.name.endsWith("server") -> configureServerProject()
-      project.name.endsWith("api") -> configureApiProject()
     }
   }
 }
@@ -170,9 +172,8 @@ private fun Project.configureServerProject() {
   }
 }
 
-@Suppress("UNUSED_VARIABLE")
 private fun Project.configureApiProject() {
-  val jar by this.tasks.getting(Jar::class) {
+  tasks.withType<Jar> {
     doFirst {
       buildDir.resolve("tmp/pom.properties")
         .writeText("version=${project.version}")
@@ -192,5 +193,10 @@ private fun Project.configureApiProject() {
         from(components["java"])
       }
     }
+  }
+
+  extensions.configure<JavaPluginExtension> {
+    withSourcesJar()
+    withJavadocJar()
   }
 }

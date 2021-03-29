@@ -23,24 +23,23 @@
  */
 package xyz.jpenilla.toothpick.task
 
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.cmd
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.jenkins
-import java.io.File
 
 public open class Paperclip : ToothpickTask() {
   @InputFile
-  public lateinit var patchedJar: File
+  public val patchedJar: RegularFileProperty = project.objects.fileProperty()
 
   @TaskAction
   private fun paperclip() {
     val workDir = toothpick.paperDir.resolve("work")
     val paperclipDir = workDir.resolve("Paperclip")
-    val vanillaJarPath =
-      workDir.resolve("Minecraft/${toothpick.minecraftVersion}/${toothpick.minecraftVersion}.jar").absolutePath
-    val patchedJarPath = patchedJar.absolutePath
+    val vanillaJarPath = workDir.resolve("Minecraft/${toothpick.minecraftVersion}/${toothpick.minecraftVersion}.jar").absolutePath
+    val patchedJarPath = patchedJar.get().asFile.absolutePath
     logger.lifecycle(">>> Building paperclip")
     val paperclipCmd = arrayListOf(
       toothpick.mavenCommand, "clean", "package",

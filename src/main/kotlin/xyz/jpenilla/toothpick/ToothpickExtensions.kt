@@ -34,14 +34,13 @@ public val Project.toothpick: ToothpickExtension
   get() = rootProject.extensions.findByType(ToothpickExtension::class)!!
 
 public fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
-  toothpick.project = this
+  if (toothpick.subprojects != emptySet<ToothpickSubproject>()) error("Toothpick should only be configured a single time using the 'Project.toothpick { ... }' extension function.")
   receiver(toothpick)
   allprojects {
     group = toothpick.groupId
     version = "${toothpick.minecraftVersion}-${toothpick.nmsRevision}"
   }
-  configureSubprojects()
-  initToothpickTasks()
+  toothpick.configureSubprojects()
 }
 
 internal val Project.rootProjectDir: File

@@ -33,8 +33,22 @@ import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.project
 import org.w3c.dom.Element
 
+@Deprecated("This function no longer does anything and should not be called. Toothpick will properly load repositories on it's own without calling this function.")
 public fun RepositoryHandler.loadRepositories(project: Project) {
-  val pomFile = project.projectDir.resolve("pom.xml")
+  project.gradle.buildFinished {
+    project.logger.warn("${project.name} uses deprecated API 'loadRepositories' in it's buildscript.")
+  }
+}
+
+@Deprecated("This function no longer does anything and should not be called. Toothpick will properly load dependencies on it's own without calling this function.")
+public fun DependencyHandlerScope.loadDependencies(project: Project) {
+  project.gradle.buildFinished {
+    project.logger.warn("${project.name} uses deprecated API 'loadDependencies' in it's buildscript.")
+  }
+}
+
+internal fun RepositoryHandler.loadRepositories0(project: Project) {
+  val pomFile = project.file("pom.xml")
   if (!pomFile.exists()) return
   val dom = parseXml(pomFile)
   val repositoriesBlock = dom.search("repositories").firstOrNull() ?: return
@@ -46,8 +60,8 @@ public fun RepositoryHandler.loadRepositories(project: Project) {
   }
 }
 
-public fun DependencyHandlerScope.loadDependencies(project: Project) {
-  val pomFile = project.projectDir.resolve("pom.xml")
+internal fun DependencyHandlerScope.loadDependencies0(project: Project) {
+  val pomFile = project.file("pom.xml")
   if (!pomFile.exists()) return
   val dom = parseXml(pomFile)
 
@@ -71,8 +85,7 @@ private fun DependencyHandlerScope.loadDependencies(project: Project, dependenci
     val scope = dependencyElem.search("scope").firstOrNull()?.textContent
     val classifier = dependencyElem.search("classifier").firstOrNull()?.textContent
 
-    val dependencyString =
-      "$groupId:$artifactId${processOptionalDependencyElement(version)}${processOptionalDependencyElement(classifier)}"
+    val dependencyString = listOfNotNull(groupId, artifactId, version, classifier).joinToString(":")
     project.logger.debug("Read $scope scope dependency '$dependencyString' from '${project.name}' pom.xml")
 
     // Special case API
@@ -103,6 +116,3 @@ private fun DependencyHandlerScope.loadDependencies(project: Project, dependenci
     }
   }
 }
-
-private fun processOptionalDependencyElement(element: String?): String =
-  element?.run { ":$this" } ?: ""

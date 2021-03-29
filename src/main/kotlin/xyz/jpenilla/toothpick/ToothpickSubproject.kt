@@ -30,17 +30,17 @@ public class ToothpickSubproject {
   public lateinit var project: Project
   public lateinit var patchesDir: File
 
-  public val baseDir: File by lazy {
+  internal val baseDir: File by lazy {
     val name = project.name
     val upstream = project.toothpick.upstream
     val suffix = if (name.endsWith("server")) "Server" else "API"
     project.toothpick.upstreamDir.resolve("$upstream-$suffix")
   }
 
-  public val projectDir: File
+  internal val projectDir: File
     get() = project.projectDir
 
-  public operator fun component1(): File = baseDir
-  public operator fun component2(): File = projectDir
-  public operator fun component3(): File = patchesDir
+  internal operator fun component1(): File = baseDir
+  internal operator fun component2(): File = projectDir
+  internal operator fun component3(): File = patchesDir
 }

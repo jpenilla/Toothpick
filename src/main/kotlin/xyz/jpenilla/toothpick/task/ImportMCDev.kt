@@ -23,6 +23,7 @@
  */
 package xyz.jpenilla.toothpick.task
 
+import io.leangen.geantyref.GenericTypeReflector.erase
 import org.gradle.api.tasks.TaskAction
 import org.spongepowered.configurate.ConfigurateException
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader
@@ -37,13 +38,11 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.streams.toList
 
-@ConfigSerializable
 internal data class ImportsContainer(
   @Comment(Constants.NMS_IMPORTS_COMMENT) val nmsImports: Set<String> = emptySet(),
   @Comment(Constants.LIBRARY_IMPORTS_COMMENT) val libraryImports: Set<LibraryImport> = emptySet()
 )
 
-@ConfigSerializable
 internal data class LibraryImport(val group: String, val library: String, val prefix: String, val file: String)
 
 public open class ImportMCDev : ToothpickInternalTask() {
@@ -80,7 +79,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
     if (!target.exists()) return false
     val message =
       "Skipped import for $className, a class with that name already exists in the source tree. Is there an extra entry in mcdevimports.conf?"
-    project.gradle.taskGraph.allTasks.last().doLast {
+    project.gradle.buildFinished {
       logger.warn(message)
     }
     logger.warn(message)
@@ -139,8 +138,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
   private fun findPossibleNMSImports(): Set<String> {
     val spigotDir = toothpick.paperDecompDir.resolve("spigot")
     val spigotDirPath = spigotDir.path
-    return spigotDir
-      .walkTopDown()
+    return spigotDir.walk()
       .filter { it.isFile && it.name.endsWith(".java") }
       .map {
         it.path.substringAfter(spigotDirPath)
@@ -175,7 +173,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
       val libraries = groupFolder.listFiles() ?: error("Unable to list libraries in group '$group'")
       for (libraryFolder in libraries) {
         val library = libraryFolder.name
-        libraryFolder.walkTopDown()
+        libraryFolder.walk()
           .filter { it.isFile && it.name.endsWith(".java") }
           .map { sourceFile ->
             val prefix = sourceFile.path.substringAfter("libraries/$group/$library/").substringBeforeLast("/")
@@ -206,9 +204,13 @@ public open class ImportMCDev : ToothpickInternalTask() {
     HoconConfigurationLoader.builder().apply {
       file(file)
       defaultOptions { options ->
-        options.header(Constants.IMPORTS_CONFIGURATION_HEADER)
+        options
+          .header(Constants.IMPORTS_CONFIGURATION_HEADER)
           .serializers { builder ->
-            builder.registerAnnotatedObjects(objectMapperFactory())
+            builder.register(
+              { with(erase(it)) { kotlin.isData || isAnnotationPresent(ConfigSerializable::class.java) } },
+              objectMapperFactory().asTypeSerializer()
+            )
           }
       }
     }.build()

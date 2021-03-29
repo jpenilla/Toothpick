@@ -26,9 +26,42 @@ package xyz.jpenilla.toothpick
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.maven
+import org.gradle.kotlin.dsl.repositories
+import xyz.jpenilla.toothpick.Constants.Dependencies.PaperMinecraftServer
+import xyz.jpenilla.toothpick.Constants.Repositories
 
 public class Toothpick : Plugin<Project> {
   override fun apply(project: Project) {
-    project.extensions.create<ToothpickExtension>("toothpick", project.objects)
+    project.extensions.create<ToothpickExtension>("toothpick", project)
+
+    project.afterEvaluate {
+      for (subproject in toothpick.subprojects) {
+        configureRepositories(subproject.project)
+        configureDependencies(subproject.project)
+      }
+      initToothpickTasks()
+    }
+  }
+
+  private fun configureRepositories(project: Project) {
+    project.repositories {
+      mavenCentral()
+      maven(Repositories.MINECRAFT)
+      maven(Repositories.AIKAR)
+      mavenLocal {
+        content {
+          includeModule(PaperMinecraftServer.GROUP_ID, PaperMinecraftServer.ARTIFACT_ID)
+        }
+      }
+      loadRepositories0(project)
+    }
+  }
+
+  private fun configureDependencies(project: Project) {
+    project.dependencies {
+      loadDependencies0(project)
+    }
   }
 }

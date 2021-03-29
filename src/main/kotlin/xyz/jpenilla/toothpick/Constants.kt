@@ -27,8 +27,20 @@ internal object Constants {
   const val TASK_GROUP = "toothpick"
   const val INTERNAL_TASK_GROUP = "toothpick_internal"
 
+  object Repositories {
+    const val MINECRAFT = "https://libraries.minecraft.net/"
+    const val AIKAR = "https://repo.aikar.co/content/groups/aikar/"
+  }
+
+  object Dependencies {
+    object PaperMinecraftServer {
+      const val GROUP_ID = "io.papermc"
+      const val ARTIFACT_ID = "minecraft-server"
+    }
+  }
+
   const val IMPORTS_CONFIGURATION_HEADER: String =
-    "Extra mc-dev imports. Configure extra sources to import from NMS or decompiled libraries."
+    "Extra mc-dev imports. Configure extra files to import from NMS or library sources."
 
   const val NMS_IMPORTS_COMMENT: String = """Example nms-imports
 

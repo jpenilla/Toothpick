@@ -32,17 +32,30 @@ import xyz.jpenilla.toothpick.temporarilyDisableGitSigning
 import java.nio.file.Files
 
 public open class ApplyPatches : ToothpickTask() {
-  private val applyCommand = arrayListOf("am", "--3way", "--ignore-whitespace")
+  public companion object {
+    /**
+     * The default git arguments to apply patches.
+     *
+     * `listOf("am", "--3way", "--ignore-whitespace")`
+     */
+    public val DEFAULT_APPLY_COMMAND: List<String> = listOf("am", "--3way", "--ignore-whitespace")
+  }
 
-  public fun applyCommand(vararg gitArguments: String) {
+  private val applyCommand = ArrayList(DEFAULT_APPLY_COMMAND)
+
+  public fun applyCommand(vararg gitArguments: String): Unit =
+    applyCommand(gitArguments.toList())
+
+  public fun applyCommand(gitArguments: List<String>) {
     applyCommand.clear()
     applyCommand.addAll(gitArguments)
   }
 
   @TaskAction
   private fun applyPatches() {
-    for ((name, subproject) in toothpick.subprojects) {
-      val (sourceRepo, projectDir, patchesDir) = subproject
+    for (subproject in toothpick.subprojects) {
+      val (baseDir, projectDir, patchesDir) = subproject
+      val name = projectDir.name
 
       // Reset or initialize subproject
       logger.lifecycle(">>> Resetting subproject $name")
@@ -50,7 +63,7 @@ public open class ApplyPatches : ToothpickTask() {
         ensureSuccess(gitCmd("fetch", "origin", dir = projectDir))
         ensureSuccess(gitCmd("reset", "--hard", "origin/master", dir = projectDir))
       } else {
-        ensureSuccess(gitCmd("clone", sourceRepo.absolutePath, projectDir.absolutePath, dir = project.rootProjectDir))
+        ensureSuccess(gitCmd("clone", baseDir.absolutePath, projectDir.absolutePath, dir = project.rootProjectDir))
       }
       logger.lifecycle(">>> Done resetting subproject $name")
 

@@ -23,29 +23,44 @@
  */
 package xyz.jpenilla.toothpick.task
 
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.net.URL
 
 public open class RepackageNMS : ToothpickTask() {
+  public companion object {
+    /**
+     * [The default URL to download class mappings from.](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.16.5-cl.csrg?at=80d35549ec67b87a0cdf0d897abbe826ba34ac27)
+     */
+    public val DEFAULT_CLASS_MAPPINGS_URL: URL = URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.16.5-cl.csrg?at=80d35549ec67b87a0cdf0d897abbe826ba34ac27")
+  }
+
+  /**
+   * The URL used to download class mappings from when repackaging patches.
+   */
+  @Input
+  public var classMappingsUrl: URL = DEFAULT_CLASS_MAPPINGS_URL
+
   @TaskAction
   private fun repackage() {
-    logger.lifecycle("Downloading class mappings from spigot...")
-    val mappingsFileText = URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.16.5-cl.csrg?at=80d35549ec67b87a0cdf0d897abbe826ba34ac27").readText()
+    logger.lifecycle("Downloading class mappings...")
+    val mappingsFileText = classMappingsUrl.readText()
     logger.lifecycle("Done downloading class mappings.")
 
     logger.lifecycle(">>> Preparing patches for NMS repackage")
     val mappings = mappingsFileText
       .split("\n")
       .asSequence()
-      .filter { !it.startsWith("#") && !it.contains("$") && it.trim().isNotEmpty() }
+      .map { it.trim() }
+      .filter { !it.startsWith("#") && !it.contains("$") && it.isNotEmpty() }
       .map { it.split(" ")[1].replace("/", ".") }
       .map { Mapping(it) }
       .filter { it.newFQName != it.oldFQName }
       .toSet()
     val remapper = Remapper(mappings)
 
-    toothpick.subprojects.values
+    toothpick.subprojects
       .map { it.patchesDir }
       .forEach { patchesDir ->
         val repackagedPatchesDir =
