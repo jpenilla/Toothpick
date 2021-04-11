@@ -1,7 +1,6 @@
 plugins {
   `maven-publish`
   `kotlin-dsl`
-  kotlin("plugin.serialization") version "1.4.20"
   id("net.kyori.indra.license-header") version "1.3.1"
 }
 

@@ -26,7 +26,6 @@ package xyz.jpenilla.toothpick
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import kotlinx.dom.elements
-import kotlinx.dom.parseXml
 import kotlinx.dom.search
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
@@ -111,7 +110,7 @@ private fun Project.configureServerProject() {
         "Implementation-Version" to toothpick.forkVersion,
         "Implementation-Vendor" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Date()),
         "Specification-Title" to "Bukkit",
-        "Specification-Version" to "${project.version}",
+        "Specification-Version" to project.version.toString(),
         "Specification-Vendor" to "Bukkit Team"
       )
     }
@@ -120,15 +119,9 @@ private fun Project.configureServerProject() {
       into("META-INF/maven/io.papermc.paper/paper")
     }
 
-    // Don't like to do this but sadly have to do this for compatibility reasons
-    relocate("org.bukkit.craftbukkit", "org.bukkit.craftbukkit.v${toothpick.nmsPackage}") {
-      exclude("org.bukkit.craftbukkit.Main*")
-    }
-
-    // Make sure we relocate deps the same as Paper et al.
-    val pomFile = project.projectDir.resolve("pom.xml")
-    if (!pomFile.exists()) return@getting
-    val dom = parseXml(pomFile)
+    // Parse relocations from server pom
+    // Includes n.m.s, o.b.c, and all other relocations
+    val dom = project.parsePom() ?: return@getting
     val buildSection = dom.search("build").first()
     val plugins = buildSection.search("plugins").first()
     plugins.elements("plugin").filter {
@@ -143,17 +136,15 @@ private fun Project.configureServerProject() {
           val pattern = relocation.search("pattern").first().textContent
           val shadedPattern = relocation.search("shadedPattern").first().textContent
           val rawString = relocation.search("rawString").firstOrNull()?.textContent?.toBoolean() ?: false
-          if (pattern != "org.bukkit.craftbukkit") { // We handle cb ourselves
-            val excludes = if (rawString) listOf("net/minecraft/data/Main*") else emptyList()
-            relocate(
-              ToothpickRelocator(
-                pattern,
-                shadedPattern.replace("\${minecraft_version}", toothpick.nmsPackage),
-                rawString,
-                excludes = excludes
-              )
+          val excludes = if (rawString) listOf("net/minecraft/data/Main*") else emptyList()
+          relocate(
+            ToothpickRelocator(
+              pattern,
+              shadedPattern,
+              rawString,
+              excludes = excludes
             )
-          }
+          )
         }
     }
   }

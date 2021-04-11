@@ -114,16 +114,6 @@ public fun bashCmd(
 ): CmdResult =
   cmd("bash", "-c", *args, dir = dir, printOut = printOut)
 
-internal fun String.applyReplacements(
-  vararg replacements: Pair<String, String>
-): String {
-  var result = this
-  for ((key, value) in replacements) {
-    result = result.replace("\${$key}", value)
-  }
-  return result
-}
-
 private fun gitSigningEnabled(repo: File): Boolean =
   gitCmd("config", "commit.gpgsign", dir = repo).output?.toBoolean() == true
 
