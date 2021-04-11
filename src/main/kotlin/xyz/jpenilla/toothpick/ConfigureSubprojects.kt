@@ -25,8 +25,6 @@ package xyz.jpenilla.toothpick
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import kotlinx.dom.elements
-import kotlinx.dom.search
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPluginExtension
@@ -126,26 +124,18 @@ private fun Project.configureServerProject() {
 
     // Parse relocations from server pom
     // Includes n.m.s, o.b.c, and all other relocations
-    val dom = project.parsePom() ?: return@getting
-    val buildSection = dom.search("build").first()
-    val plugins = buildSection.search("plugins").first()
-    plugins.elements("plugin").filter {
-      val artifactId = it.search("artifactId").first().textContent
-      artifactId == "maven-shade-plugin"
-    }.forEach {
-      it.search("executions").first()
-        .search("execution").first()
-        .search("configuration").first()
-        .search("relocations").first()
-        .elements("relocation").forEach { relocation ->
-          val pattern = relocation.search("pattern").first().textContent
-          val shadedPattern = relocation.search("shadedPattern").first().textContent
-          val rawString = relocation.search("rawString").firstOrNull()?.textContent?.toBoolean() ?: false
-          val excludes = mutableListOf<String>()
-          if (rawString) excludes += "net/minecraft/data/Main*"
-          if (pattern == "org.bukkit.craftbukkit") excludes += "org.bukkit.craftbukkit.Main*"
-          relocate(ToothpickRelocator(pattern, shadedPattern, rawString, excludes = excludes))
-        }
+    val pom = project.parsePom() ?: return@getting
+    val shadePlugin = pom.get("build").get("plugins").asSequence()
+      .flatMap { it.asSequence() }
+      .first { it.get("artifactId").textValue() == "maven-shade-plugin" }
+    shadePlugin.get("executions").get("execution").get("configuration").get("relocations").get("relocation").forEach {
+      val pattern = it.get("pattern").textValue()
+      val shadedPattern = it.get("shadedPattern").textValue()
+      val rawString = it.get("rawString")?.booleanValue() ?: false
+      val excludes = mutableListOf<String>()
+      if (rawString) excludes += "net/minecraft/data/Main*"
+      if (pattern == "org.bukkit.craftbukkit") excludes += "org.bukkit.craftbukkit.Main*"
+      relocate(ToothpickRelocator(pattern, shadedPattern, rawString, excludes = excludes))
     }
   }
 
