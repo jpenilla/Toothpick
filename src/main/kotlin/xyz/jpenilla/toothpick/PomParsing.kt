@@ -23,27 +23,26 @@
  */
 package xyz.jpenilla.toothpick
 
-import kotlinx.dom.elements
-import kotlinx.dom.parseXml
-import kotlinx.dom.search
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import org.gradle.api.Project
-import org.w3c.dom.Document
 
-internal fun Project.parsePom(): Document? {
+internal fun Project.parsePom(): JsonNode? {
   val file = file("pom.xml")
   if (!file.exists()) {
     return null
   }
   val contents = file.readText()
-  val dom = parseXml(contents.byteInputStream())
-  val properties = dom.search("properties").firstOrNull()?.elements() ?: emptyList()
-  val propertiesMap = properties.associateBy({ it.nodeName }, { it.textContent }).toMutableMap()
+
+  val mapper = XmlMapper.builder().build()
+  val parsed = mapper.readTree(contents)
+  val propertiesMap = parsed.path("properties").fields().asSequence().associateBy({ it.key }, { it.value.textValue() }).toMutableMap()
 
   propertiesMap["project.version"] = project.version.toString()
   propertiesMap["minecraft.version"] = toothpick.minecraftVersion
   propertiesMap["minecraft_version"] = toothpick.nmsPackage
 
-  return parseXml(contents.replaceProperties(propertiesMap).byteInputStream())
+  return mapper.readTree(contents.replaceProperties(propertiesMap))
 }
 
 private fun String.replaceProperties(

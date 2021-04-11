@@ -14,9 +14,10 @@ repositories {
 }
 
 dependencies {
+  implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.12.2")
+  implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.2")
   implementation("org.spongepowered", "configurate-hocon", "4.1.1")
   implementation("org.spongepowered", "configurate-extra-kotlin", "4.1.1")
-  implementation("org.jetbrains.kotlinx", "kotlinx.dom", "0.0.10")
   implementation("gradle.plugin.com.github.jengelman.gradle.plugins", "shadow", "7.0.0")
 }
 
