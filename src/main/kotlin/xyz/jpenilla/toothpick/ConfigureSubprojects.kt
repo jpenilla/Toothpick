@@ -125,7 +125,7 @@ private fun Project.configureServerProject(subproject: ToothpickSubproject) {
 
     // Import relocations from server pom
     val pom = subproject.pom ?: return@getting
-    val shadePlugin: ShadePlugin = pom.build.plugins.find { it is ShadePlugin } as ShadePlugin? ?: error("Could not find shade plugin in server pom!")
+    val shadePlugin = pom.build.plugins.filterIsInstance<ShadePlugin>().firstOrNull() ?: error("Could not find shade plugin in server pom!")
     for (relocation in shadePlugin.executions.first().configuration.relocations) {
       val (pattern, shadedPattern, rawString, excludes) = relocation
       val modifiedExcludes = excludes.toMutableList()
