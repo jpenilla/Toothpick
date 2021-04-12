@@ -46,6 +46,7 @@ internal data class ShadeExecution(
   val configuration: ShadeConfiguration = ShadeConfiguration()
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 internal data class Filter(
   val artifact: String,
   val excludes: List<String> = emptyList()

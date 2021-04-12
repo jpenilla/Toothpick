@@ -41,11 +41,13 @@ internal data class DependencyManagement(
   val dependencies: List<Dependency> = emptyList()
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 internal data class Repository(
   val id: String,
   val url: String
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 internal data class Dependency(
   val groupId: String,
   val artifactId: String,
