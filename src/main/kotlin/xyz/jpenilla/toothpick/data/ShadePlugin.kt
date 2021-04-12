@@ -25,6 +25,7 @@ package xyz.jpenilla.toothpick.data
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 internal data class ShadePlugin(
   val executions: List<ShadeExecution> = emptyList(),
   val configuration: ShadeConfiguration = ShadeConfiguration()
