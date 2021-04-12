@@ -9,15 +9,18 @@ version = "1.0.0-SNAPSHOT"
 
 repositories {
   mavenCentral()
-  jcenter()
   gradlePluginPortal()
 }
 
 dependencies {
-  implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.12.2")
-  implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", "2.12.2")
-  implementation("org.spongepowered", "configurate-hocon", "4.1.1")
-  implementation("org.spongepowered", "configurate-extra-kotlin", "4.1.1")
+  val jacksonVersion = "2.12.2"
+  implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
+  implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", jacksonVersion)
+
+  val configurateVersion = "4.1.1"
+  implementation("org.spongepowered", "configurate-hocon", configurateVersion)
+  implementation("org.spongepowered", "configurate-extra-kotlin", configurateVersion)
+
   implementation("gradle.plugin.com.github.jengelman.gradle.plugins", "shadow", "7.0.0")
 }
 
