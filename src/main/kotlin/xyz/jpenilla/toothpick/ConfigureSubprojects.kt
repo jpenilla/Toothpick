@@ -45,8 +45,9 @@ import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.withType
-import xyz.jpenilla.toothpick.relocation.ToothpickRelocator
-import xyz.jpenilla.toothpick.transformer.ModifiedLog4j2PluginsCacheFileTransformer
+import xyz.jpenilla.toothpick.data.ShadePlugin
+import xyz.jpenilla.toothpick.shadow.ToothpickRelocator
+import xyz.jpenilla.toothpick.shadow.ModifiedLog4j2PluginsCacheFileTransformer
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.text.Charsets.UTF_8

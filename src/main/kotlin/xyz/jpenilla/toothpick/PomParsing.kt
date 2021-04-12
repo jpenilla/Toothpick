@@ -23,103 +23,28 @@
  */
 package xyz.jpenilla.toothpick
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.gradle.api.Project
+import xyz.jpenilla.toothpick.data.MavenPom
 
 private val mapper = XmlMapper.builder()
   .addModule(kotlinModule())
   .build()
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-internal data class MavenPom(
-  val properties: Map<String, String> = emptyMap(),
-  val repositories: List<DeclaredRepository> = emptyList(),
-  val dependencies: List<DeclaredDependency> = emptyList(),
-  val dependencyManagement: DependencyManagement?,
-  val build: BuildSection
-)
-
-internal data class DependencyManagement(
-  val dependencies: List<DeclaredDependency> = emptyList()
-)
-
-internal data class DeclaredRepository(
-  val id: String,
-  val url: String
-)
-
-internal data class DeclaredDependency(
-  val groupId: String,
-  val artifactId: String,
-  val version: String?,
-  val scope: String?,
-  val classifier: String?,
-  val type: String?,
-  val exclusions: List<DeclaredDependency> = emptyList()
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-internal data class BuildSection(
-  val plugins: List<MavenPlugin> = emptyList()
-)
-
-@JsonTypeInfo(
-  use = JsonTypeInfo.Id.NAME,
-  include = JsonTypeInfo.As.PROPERTY,
-  property = "artifactId",
-  defaultImpl = MavenPlugin::class
-)
-@JsonSubTypes(Type(ShadePlugin::class, name = "maven-shade-plugin"))
-@JsonIgnoreProperties(ignoreUnknown = true)
-internal open class MavenPlugin
-
-internal data class ShadePlugin(
-  val executions: List<ShadeExecution> = emptyList(),
-  val configuration: ShadeConfiguration = ShadeConfiguration()
-) : MavenPlugin()
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-internal data class ShadeConfiguration(
-  val relocations: List<Relocation> = emptyList(),
-  val filters: List<Filter> = emptyList()
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-internal data class ShadeExecution(
-  val phase: String,
-  val configuration: ShadeConfiguration = ShadeConfiguration()
-)
-
-internal data class Filter(
-  val artifact: String,
-  val excludes: List<String> = emptyList()
-)
-
-internal data class Relocation(
-  val pattern: String,
-  val shadedPattern: String,
-  val rawString: Boolean = false,
-  val excludes: List<String> = emptyList()
-)
-
 internal fun Project.parsePomToTree(): JsonNode? {
-  val pomContents = readPom() ?: return null
+  val pomContents = readPomText() ?: return null
   return mapper.readTree(pomContents)
 }
 
 internal fun Project.parsePom(): MavenPom? {
-  val pomContents = readPom() ?: return null
+  val pomContents = readPomText() ?: return null
   return mapper.readValue<MavenPom>(pomContents)
 }
 
-private fun Project.readPom(): String? {
+private fun Project.readPomText(): String? {
   val file = file("pom.xml")
   if (!file.exists()) {
     return null
