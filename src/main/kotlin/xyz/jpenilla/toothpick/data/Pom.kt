@@ -65,8 +65,11 @@ internal data class BuildSection(
   use = JsonTypeInfo.Id.NAME,
   include = JsonTypeInfo.As.PROPERTY,
   property = "artifactId",
-  defaultImpl = MavenPlugin::class
+  defaultImpl = MavenPlugin::class,
+  visible = true
 )
-@JsonSubTypes(Type(ShadePlugin::class, name = "maven-shade-plugin"))
+@JsonSubTypes(Type(ShadePlugin::class, name = ShadePlugin.PLUGIN_NAME))
 @JsonIgnoreProperties(ignoreUnknown = true)
-internal open class MavenPlugin
+internal open class MavenPlugin(val artifactId: String) {
+  override fun toString(): String = "MavenPlugin(artifactId=$artifactId)"
+}
