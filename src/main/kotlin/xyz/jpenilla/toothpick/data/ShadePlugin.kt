@@ -28,7 +28,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 internal data class ShadePlugin(
   val executions: List<ShadeExecution> = emptyList(),
   val configuration: ShadeConfiguration = ShadeConfiguration()
-) : MavenPlugin()
+) : MavenPlugin(PLUGIN_NAME) {
+  companion object {
+    const val PLUGIN_NAME = "maven-shade-plugin"
+  }
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 internal data class ShadeConfiguration(
