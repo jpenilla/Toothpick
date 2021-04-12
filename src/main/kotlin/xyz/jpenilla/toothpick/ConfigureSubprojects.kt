@@ -55,7 +55,7 @@ internal fun ToothpickExtension.configureSubprojects() {
   for (subproject in subprojects) {
     subproject.project.commonSubprojectConfiguration()
   }
-  serverProject.project.configureServerProject()
+  serverProject.project.configureServerProject(serverProject)
   apiProject.project.configureApiProject()
 }
 
@@ -84,7 +84,7 @@ private fun Project.commonSubprojectConfiguration() {
   }
 }
 
-private fun Project.configureServerProject() {
+private fun Project.configureServerProject(subproject: ToothpickSubproject) {
   apply<ShadowPlugin>()
 
   val generatePomFileForMavenJavaPublication by tasks.getting(GenerateMavenPom::class) {
@@ -122,20 +122,14 @@ private fun Project.configureServerProject() {
       into("META-INF/maven/io.papermc.paper/paper")
     }
 
-    // Parse relocations from server pom
-    // Includes n.m.s, o.b.c, and all other relocations
-    val pom = project.parsePom() ?: return@getting
-    val shadePlugin = pom.get("build").get("plugins").asSequence()
-      .flatMap { it.asSequence() }
-      .first { it.get("artifactId").textValue() == "maven-shade-plugin" }
-    shadePlugin.get("executions").get("execution").get("configuration").get("relocations").get("relocation").forEach {
-      val pattern = it.get("pattern").textValue()
-      val shadedPattern = it.get("shadedPattern").textValue()
-      val rawString = it.get("rawString")?.booleanValue() ?: false
-      val excludes = mutableListOf<String>()
-      if (rawString) excludes += "net/minecraft/data/Main*"
-      if (pattern == "org.bukkit.craftbukkit") excludes += "org.bukkit.craftbukkit.Main*"
-      relocate(ToothpickRelocator(pattern, shadedPattern, rawString, excludes = excludes))
+    // Import relocations from server pom
+    val pom = subproject.pom ?: return@getting
+    val shadePlugin: ShadePlugin = pom.build.plugins.find { it is ShadePlugin } as ShadePlugin? ?: error("Could not find shade plugin in server pom!")
+    for (relocation in shadePlugin.executions.first().configuration.relocations) {
+      val (pattern, shadedPattern, rawString, excludes) = relocation
+      val modifiedExcludes = excludes.toMutableList()
+      if (rawString) modifiedExcludes.add("net/minecraft/data/Main*")
+      relocate(ToothpickRelocator(pattern, shadedPattern, rawString, modifiedExcludes))
     }
   }
 

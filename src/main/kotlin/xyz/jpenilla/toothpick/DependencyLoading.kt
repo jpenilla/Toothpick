@@ -23,7 +23,6 @@
  */
 package xyz.jpenilla.toothpick
 
-import com.fasterxml.jackson.databind.JsonNode
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.kotlin.dsl.DependencyHandlerScope
@@ -44,44 +43,29 @@ public fun DependencyHandlerScope.loadDependencies(project: Project) {
   }
 }
 
-internal fun RepositoryHandler.loadRepositories0(project: Project) {
+internal fun RepositoryHandler.loadRepositories(subproject: ToothpickSubproject) {
   // Load repositories
-  val pom = project.parsePom() ?: return
-  val repos = pom.path("repositories").get("repository") ?: return
-  if (repos.isArray) {
-    repos.forEach { node ->
-      maven(node.get("url").textValue())
-    }
-  } else {
-    maven(repos.get("url").textValue())
+  val mavenPom = subproject.pom ?: return
+  for (repo in mavenPom.repositories) {
+    maven(repo.url)
   }
 }
 
-internal fun DependencyHandlerScope.loadDependencies0(project: Project) {
+internal fun DependencyHandlerScope.loadDependencies(subproject: ToothpickSubproject) {
   // Load dependencies
-  val pom = project.parsePom() ?: return
-  sequenceOf(
-    pom.path("dependencyManagement").path("dependencies"),
-    pom.path("dependencies")
-  ).map { it.get("dependency") }
-    .filterNotNull()
-    .forEach { node ->
-      if (node.isArray) {
-        node.forEach { dep ->
-          loadDependency(project, dep)
-        }
-      } else {
-        loadDependency(project, node)
-      }
-    }
+  val mavenPom = subproject.pom ?: return
+  val project = subproject.project
+  mavenPom.dependencyManagement?.dependencies?.forEach { dependency ->
+    loadDependency(project, dependency)
+  }
+  mavenPom.dependencies.forEach { dependency ->
+    loadDependency(project, dependency)
+  }
 }
 
-private fun DependencyHandlerScope.loadDependency(project: Project, dependency: JsonNode) {
-  val groupId = dependency.get("groupId").textValue()
-  val artifactId = dependency.get("artifactId").textValue()
-  val version = dependency.get("version")?.textValue()
-  val scope = dependency.get("scope")?.textValue()
-  val classifier = dependency.get("classifier")?.textValue()
+@Suppress("unused_variable")
+private fun DependencyHandlerScope.loadDependency(project: Project, dependency: DeclaredDependency) {
+  val (groupId, artifactId, version, scope, classifier, type, exclusions) = dependency
 
   val dependencyString = listOfNotNull(groupId, artifactId, version, classifier).joinToString(":")
   project.logger.debug("Read $scope scope dependency '$dependencyString' from '${project.name}' pom.xml")
@@ -91,7 +75,7 @@ private fun DependencyHandlerScope.loadDependency(project: Project, dependency: 
     || artifactId == "${project.toothpick.upstreamLowercase}-api"
   ) {
     if (project == project.toothpick.serverProject.project) {
-      add("api", project(":${project.toothpick.apiProject.project.name}"))
+      "api"(project(":${project.toothpick.apiProject.project.name}"))
     }
     return
   }

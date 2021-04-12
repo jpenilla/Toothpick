@@ -40,6 +40,8 @@ public class ToothpickSubproject {
   internal val projectDir: File
     get() = project.projectDir
 
+  internal val pom: MavenPom? by lazy { project.parsePom() }
+
   internal operator fun component1(): File = baseDir
   internal operator fun component2(): File = projectDir
   internal operator fun component3(): File = patchesDir

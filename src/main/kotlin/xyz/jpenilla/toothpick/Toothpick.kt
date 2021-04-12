@@ -38,15 +38,15 @@ public class Toothpick : Plugin<Project> {
 
     project.afterEvaluate {
       for (subproject in toothpick.subprojects) {
-        configureRepositories(subproject.project)
-        configureDependencies(subproject.project)
+        configureRepositories(subproject)
+        configureDependencies(subproject)
       }
       initToothpickTasks()
     }
   }
 
-  private fun configureRepositories(project: Project) {
-    project.repositories {
+  private fun configureRepositories(subproject: ToothpickSubproject) {
+    subproject.project.repositories {
       mavenCentral()
       maven(Repositories.MINECRAFT)
       maven(Repositories.AIKAR)
@@ -55,13 +55,13 @@ public class Toothpick : Plugin<Project> {
           includeModule(PaperMinecraftServer.GROUP_ID, PaperMinecraftServer.ARTIFACT_ID)
         }
       }
-      loadRepositories0(project)
+      loadRepositories(subproject)
     }
   }
 
-  private fun configureDependencies(project: Project) {
-    project.dependencies {
-      loadDependencies0(project)
+  private fun configureDependencies(subproject: ToothpickSubproject) {
+    subproject.project.dependencies {
+      loadDependencies(subproject)
     }
   }
 }
