@@ -28,6 +28,7 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.project
+import xyz.jpenilla.toothpick.data.Dependency
 
 @Deprecated("This function no longer does anything and should not be called. Toothpick will properly load repositories on it's own without calling this function.")
 public fun RepositoryHandler.loadRepositories(project: Project) {
@@ -64,7 +65,7 @@ internal fun DependencyHandlerScope.loadDependencies(subproject: ToothpickSubpro
 }
 
 @Suppress("unused_variable")
-private fun DependencyHandlerScope.loadDependency(project: Project, dependency: DeclaredDependency) {
+private fun DependencyHandlerScope.loadDependency(project: Project, dependency: Dependency) {
   val (groupId, artifactId, version, scope, classifier, type, exclusions) = dependency
 
   val dependencyString = listOfNotNull(groupId, artifactId, version, classifier).joinToString(":")

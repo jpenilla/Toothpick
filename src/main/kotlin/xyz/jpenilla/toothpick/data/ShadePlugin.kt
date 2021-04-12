@@ -21,29 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package xyz.jpenilla.toothpick
+package xyz.jpenilla.toothpick.data
 
-import org.gradle.api.Project
-import xyz.jpenilla.toothpick.data.MavenPom
-import java.io.File
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-public class ToothpickSubproject {
-  public lateinit var project: Project
-  public lateinit var patchesDir: File
+internal data class ShadePlugin(
+  val executions: List<ShadeExecution> = emptyList(),
+  val configuration: ShadeConfiguration = ShadeConfiguration()
+) : MavenPlugin()
 
-  internal val baseDir: File by lazy {
-    val name = project.name
-    val upstream = project.toothpick.upstream
-    val suffix = if (name.endsWith("server")) "Server" else "API"
-    project.toothpick.upstreamDir.resolve("$upstream-$suffix")
-  }
+@JsonIgnoreProperties(ignoreUnknown = true)
+internal data class ShadeConfiguration(
+  val relocations: List<Relocation> = emptyList(),
+  val filters: List<Filter> = emptyList()
+)
 
-  internal val projectDir: File
-    get() = project.projectDir
+@JsonIgnoreProperties(ignoreUnknown = true)
+internal data class ShadeExecution(
+  val phase: String,
+  val configuration: ShadeConfiguration = ShadeConfiguration()
+)
 
-  internal val pom: MavenPom? by lazy { project.parsePom() }
+internal data class Filter(
+  val artifact: String,
+  val excludes: List<String> = emptyList()
+)
 
-  internal operator fun component1(): File = baseDir
-  internal operator fun component2(): File = projectDir
-  internal operator fun component3(): File = patchesDir
-}
+internal data class Relocation(
+  val pattern: String,
+  val shadedPattern: String,
+  val rawString: Boolean = false,
+  val excludes: List<String> = emptyList()
+)
