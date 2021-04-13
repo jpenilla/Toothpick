@@ -57,5 +57,6 @@ internal data class Relocation(
   val pattern: String,
   val shadedPattern: String,
   val rawString: Boolean = false,
+  val includes: List<String> = emptyList(),
   val excludes: List<String> = emptyList()
 )
