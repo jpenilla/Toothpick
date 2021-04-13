@@ -127,10 +127,10 @@ private fun Project.configureServerProject(subproject: ToothpickSubproject) {
     val pom = subproject.pom ?: return@getting
     val shadePlugin = pom.build.plugins.filterIsInstance<ShadePlugin>().firstOrNull() ?: error("Could not find shade plugin in server pom!")
     for (relocation in shadePlugin.executions.first().configuration.relocations) {
-      val (pattern, shadedPattern, rawString, excludes) = relocation
+      val (pattern, shadedPattern, rawString, includes, excludes) = relocation
       val modifiedExcludes = excludes.toMutableList()
       if (rawString) modifiedExcludes.add("net/minecraft/data/Main*")
-      relocate(ToothpickRelocator(pattern, shadedPattern, rawString, excludes = modifiedExcludes))
+      relocate(ToothpickRelocator(pattern, shadedPattern, rawString, includes, modifiedExcludes))
     }
   }
 
