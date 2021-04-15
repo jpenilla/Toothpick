@@ -111,7 +111,8 @@ private fun Project.configureServerProject() {
         "Implementation-Vendor" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Date()),
         "Specification-Title" to "Bukkit",
         "Specification-Version" to project.version.toString(),
-        "Specification-Vendor" to "Bukkit Team"
+        "Specification-Vendor" to "Bukkit Team",
+        "Multi-Release" to true
       )
     }
     from(project.buildDir.resolve("tmp/pom.xml")) {
