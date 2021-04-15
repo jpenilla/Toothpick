@@ -137,15 +137,10 @@ private fun Project.configureServerProject() {
           val pattern = relocation.search("pattern").first().textContent
           val shadedPattern = relocation.search("shadedPattern").first().textContent
           val rawString = relocation.search("rawString").firstOrNull()?.textContent?.toBoolean() ?: false
-          val excludes = if (rawString) listOf("net/minecraft/data/Main*") else emptyList()
-          relocate(
-            ToothpickRelocator(
-              pattern,
-              shadedPattern,
-              rawString,
-              excludes = excludes
-            )
-          )
+          val excludes = mutableListOf<String>()
+          if (rawString) excludes += "net/minecraft/data/Main*"
+          if (pattern == "org.bukkit.craftbukkit") excludes += "org.bukkit.craftbukkit.Main*"
+          relocate(ToothpickRelocator(pattern, shadedPattern, rawString, excludes = excludes))
         }
     }
   }
