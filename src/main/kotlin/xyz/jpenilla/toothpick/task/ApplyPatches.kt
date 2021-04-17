@@ -67,6 +67,10 @@ public open class ApplyPatches : ToothpickTask() {
       }
       logger.lifecycle(">>> Done resetting subproject $name")
 
+      if (!patchesDir.exists()) {
+        logger.lifecycle(">>> Patches directory for $name does not exist, skipping")
+        continue
+      }
       // Apply patches
       val patchPaths = Files.newDirectoryStream(patchesDir.toPath())
         .map { it.toFile() }
