@@ -25,6 +25,7 @@ package xyz.jpenilla.toothpick
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPluginExtension
@@ -36,6 +37,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.api.tasks.testing.Test
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.attributes
 import org.gradle.kotlin.dsl.configure
@@ -45,9 +47,10 @@ import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.getting
 import org.gradle.kotlin.dsl.withType
+import xyz.jpenilla.toothpick.data.JavadocPlugin
 import xyz.jpenilla.toothpick.data.ShadePlugin
-import xyz.jpenilla.toothpick.shadow.ToothpickRelocator
 import xyz.jpenilla.toothpick.shadow.ModifiedLog4j2PluginsCacheFileTransformer
+import xyz.jpenilla.toothpick.shadow.ToothpickRelocator
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.text.Charsets.UTF_8
@@ -57,7 +60,7 @@ internal fun ToothpickExtension.configureSubprojects() {
     subproject.project.commonSubprojectConfiguration()
   }
   serverProject.project.configureServerProject(serverProject)
-  apiProject.project.configureApiProject()
+  apiProject.project.configureApiProject(apiProject)
 }
 
 private fun Project.commonSubprojectConfiguration() {
@@ -148,7 +151,7 @@ private fun Project.configureServerProject(subproject: ToothpickSubproject) {
   }
 }
 
-private fun Project.configureApiProject() {
+private fun Project.configureApiProject(subproject: ToothpickSubproject) {
   tasks.withType<Jar> {
     doFirst {
       buildDir.resolve("tmp/pom.properties")
@@ -159,6 +162,29 @@ private fun Project.configureApiProject() {
     }
     manifest {
       attributes("Automatic-Module-Name" to "org.bukkit")
+    }
+  }
+
+  tasks.withType<Javadoc> {
+    options {
+      if (this !is StandardJavadocDocletOptions) return@options
+
+      val currentVersion = JavaVersion.current().majorVersion.toInt()
+
+      links(jdkApiDocs(currentVersion))
+
+      if (currentVersion in 9..11) {
+        // Apply workaround for https://bugs.openjdk.java.net/browse/JDK-8215291
+        // Fixes search links, but breaks external doc links which use modules. Fixed in JDK 12+.
+        val noModuleDirectories = addBooleanOption("-no-module-directories")
+        noModuleDirectories.value = true
+      }
+
+      val pom = subproject.pom ?: return@options
+      val javadocPlugin = pom.build.plugins.filterIsInstance<JavadocPlugin>().firstOrNull() ?: return@options
+      for (link in javadocPlugin.configuration.links) {
+        links(link)
+      }
     }
   }
 
@@ -175,4 +201,10 @@ private fun Project.configureApiProject() {
     withSourcesJar()
     withJavadocJar()
   }
+}
+
+private fun jdkApiDocs(javaVersion: Int): String = if (javaVersion >= 11) {
+  "https://docs.oracle.com/en/java/javase/$javaVersion/docs/api"
+} else {
+  "https://docs.oracle.com/javase/$javaVersion/docs/api"
 }
