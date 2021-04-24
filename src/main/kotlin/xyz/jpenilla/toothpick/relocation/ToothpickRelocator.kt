@@ -31,6 +31,10 @@ import java.util.regex.Pattern
 internal class ToothpickRelocator private constructor(
   private val simpleRelocator: SimpleRelocator
 ) : Relocator by simpleRelocator {
+  private val compiledPathPattern: Pattern by lazy {
+    Pattern.compile(simpleRelocator.pathPattern)
+  }
+
   constructor(
     pattern: String,
     shadedPattern: String,
@@ -46,7 +50,7 @@ internal class ToothpickRelocator private constructor(
     if (simpleRelocator.rawString) {
       return isIncludedMethod(simpleRelocator, path) as Boolean
         && !(isExcludedMethod(simpleRelocator, path) as Boolean)
-        && Pattern.compile(simpleRelocator.pathPattern).matcher(path).find()
+        && compiledPathPattern.matcher(path).find()
     }
     return simpleRelocator.canRelocatePath(path)
   }
