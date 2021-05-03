@@ -1,0 +1,47 @@
+metadata:
+  format: { version: 1.0 }
+  polyglot-extensions:
+    - plugins
+
+plugins:
+  com.gradle.plugin-publish: 0.14.0
+  net.kyori.indra: &indra 2.0.3
+  net.kyori.indra.license-header: *indra
+  net.kyori.indra.publishing.gradle-plugin: *indra
+
+versions:
+  shadow: 7.0.0
+  configurate: 4.0.0
+  jackson: 2.12.2
+
+dependencies:
+  shadow:
+    group: gradle.plugin.com.github.jengelman.gradle.plugins
+    name: shadow
+    version: { ref: shadow }
+
+  configurateHocon:
+    group: org.spongepowered
+    name: configurate-hocon
+    version: { ref: configurate }
+  configurateExtraKotlin:
+    group: org.spongepowered
+    name: configurate-extra-kotlin
+    version: { ref: configurate }
+
+  jacksonDataformatXml:
+    group: com.fasterxml.jackson.dataformat
+    name: jackson-dataformat-xml
+    version: { ref: jackson }
+  jacksonModuleKotlin:
+    group: com.fasterxml.jackson.module
+    name: jackson-module-kotlin
+    version: { ref: jackson }
+
+bundles:
+  configurate:
+    - configurateHocon
+    - configurateExtraKotlin
+  jackson:
+    - jacksonDataformatXml
+    - jacksonModuleKotlin
