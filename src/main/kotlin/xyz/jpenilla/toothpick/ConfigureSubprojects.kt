@@ -98,6 +98,10 @@ private fun Project.configureServerProject() {
     exclude("org/bukkit/craftbukkit/inventory/ItemStack*Test.class")
   }
 
+  tasks.getByName("jar", Jar::class) {
+    archiveClassifier.set("dev")
+  }
+
   val shadowJar by tasks.getting(ShadowJar::class) {
     archiveClassifier.set("") // ShadowJar is the main server artifact
     dependsOn(generatePomFileForMavenJavaPublication)
