@@ -1,7 +1,7 @@
 plugins {
   `maven-publish`
   `kotlin-dsl`
-  id("net.kyori.indra.license-header") version "1.3.1"
+  id("net.kyori.indra.license-header") version "2.0.2"
 }
 
 group = "xyz.jpenilla"
