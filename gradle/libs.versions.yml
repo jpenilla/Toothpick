@@ -5,7 +5,7 @@ metadata:
 
 plugins:
   com.gradle.plugin-publish: 0.14.0
-  net.kyori.indra: &indra 2.0.3
+  net.kyori.indra: &indra 2.0.4
   net.kyori.indra.license-header: *indra
   net.kyori.indra.publishing.gradle-plugin: *indra
 
@@ -37,6 +37,11 @@ dependencies:
     group: com.fasterxml.jackson.module
     name: jackson-module-kotlin
     version: { ref: jackson }
+
+  indraGit:
+    group: net.kyori
+    name: indra-git
+    version: *indra
 
 bundles:
   configurate:
