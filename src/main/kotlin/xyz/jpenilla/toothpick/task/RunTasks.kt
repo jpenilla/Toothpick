@@ -25,7 +25,6 @@ package xyz.jpenilla.toothpick.task
 
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.register
 import xyz.jpenilla.toothpick.Constants
@@ -33,15 +32,16 @@ import xyz.jpenilla.toothpick.shadowJar
 import xyz.jpenilla.toothpick.toothpick
 
 internal fun Project.registerRunTasks() {
-  tasks.register<Exec>("runServer") {
+  tasks.register<JavaExec>("runServer") {
     group = Constants.TASK_GROUP
     description = "Spin up a test server"
     workingDir = projectDir.resolve("run")
     standardInput = System.`in`
     val shadowJar = toothpick.serverProject.project.tasks.shadowJar
     dependsOn(shadowJar)
-    val patchedJar = shadowJar.outputs.files.singleFile
-    commandLine = listOf("java", "-jar", patchedJar.absolutePath, "nogui")
+    val patchedJar = shadowJar.archiveFile.get().asFile
+    classpath(patchedJar)
+    args = listOf("nogui")
     doFirst {
       if (!workingDir.exists()) workingDir.mkdir()
     }
