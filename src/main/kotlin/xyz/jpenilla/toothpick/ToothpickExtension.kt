@@ -23,12 +23,19 @@
  */
 package xyz.jpenilla.toothpick
 
+import net.kyori.indra.git.IndraGitExtension
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.findByType
 import java.io.File
 import java.util.Locale
 
+/**
+ * An extension exposing configuration for [Toothpick].
+ *
+ * @param project the project owning the [ToothpickExtension]
+ */
 public open class ToothpickExtension(public val project: Project) {
-  public lateinit var forkName: String
+  public var forkName: String = project.name
   public val forkNameLowercase: String
     get() = forkName.toLowerCase(Locale.ENGLISH)
   public lateinit var forkUrl: String
@@ -43,6 +50,12 @@ public open class ToothpickExtension(public val project: Project) {
     get() = upstream.toLowerCase(Locale.ENGLISH)
   public lateinit var upstreamBranch: String
 
+  /**
+   * Allows for customizing the name of the final Paperclip jar.
+   * Defaults to `$forkNameLowercase-paperclip.jar` if unset.
+   *
+   * Custom names will be automatically have the `.jar` extension appended.
+   */
   public var paperclipName: String = ""
     get(): String = if (field.isEmpty()) {
       "$forkNameLowercase-paperclip.jar"
@@ -56,12 +69,16 @@ public open class ToothpickExtension(public val project: Project) {
 
   public fun server(receiver: ToothpickSubproject.() -> Unit) {
     if (::serverProject.isInitialized) error("Cannot initialize the server subproject a second time!")
-    serverProject = ToothpickSubproject().apply(receiver)
+    serverProject = ToothpickSubproject(project).apply(receiver)
+
+    serverProject.project.commonSubprojectConfiguration()
   }
 
   public fun api(receiver: ToothpickSubproject.() -> Unit) {
     if (::apiProject.isInitialized) error("Cannot initialize the api subproject a second time!")
-    apiProject = ToothpickSubproject().apply(receiver)
+    apiProject = ToothpickSubproject(project).apply(receiver)
+
+    apiProject.project.commonSubprojectConfiguration()
   }
 
   public val subprojects: Set<ToothpickSubproject>
@@ -69,6 +86,19 @@ public open class ToothpickExtension(public val project: Project) {
 
   internal val upstreamDir: File
     get() = project.projectDir.resolve(upstream)
+
+  /**
+   * Get the latest commit hash from the Git repo residing in the project directory of [project].
+   *
+   * @param length the length to truncate commit hashes to, defaulting to 7. can be null to disable truncation
+   * @return the commit hash, or null if the [project] is not in a git repository or has not had its initial commit
+   */
+  public fun commitHash(length: Int? = 7): String? {
+    val indraGit = project.extensions.findByType(IndraGitExtension::class) ?: error("Could not locate IndraGitExtension.")
+    return indraGit.commit()?.name?.run {
+      if (length == null) this else substring(0, length)
+    }
+  }
 
   internal val paperDir: File by lazy {
     if (upstream == "Paper") {

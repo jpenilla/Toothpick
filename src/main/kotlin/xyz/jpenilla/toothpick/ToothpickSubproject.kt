@@ -27,21 +27,24 @@ import org.gradle.api.Project
 import xyz.jpenilla.toothpick.data.MavenPom
 import java.io.File
 
-public class ToothpickSubproject {
+public class ToothpickSubproject internal constructor(internal val parentProject: Project) {
   public lateinit var project: Project
   public lateinit var patchesDir: File
 
   internal val baseDir: File by lazy {
     val name = project.name
-    val upstream = project.toothpick.upstream
+    val upstream = parentProject.toothpick.upstream
     val suffix = if (name.endsWith("server")) "Server" else "API"
-    project.toothpick.upstreamDir.resolve("$upstream-$suffix")
+    parentProject.toothpick.upstreamDir.resolve("$upstream-$suffix")
   }
+
+  internal val toothpick: ToothpickExtension
+    get() = parentProject.toothpick
 
   internal val projectDir: File
     get() = project.projectDir
 
-  internal val pom: MavenPom? by lazy { project.parsePom() }
+  internal val pom: MavenPom? by lazy { parsePom() }
 
   internal operator fun component1(): File = baseDir
   internal operator fun component2(): File = projectDir
