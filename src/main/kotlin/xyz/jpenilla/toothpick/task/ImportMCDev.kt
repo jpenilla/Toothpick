@@ -108,6 +108,11 @@ public open class ImportMCDev : ToothpickInternalTask() {
     val patches = Files.list(toothpick.serverProject.patchesDir.toPath()).map { it.toFile() }.toList()
     import(findNeededImports(patches))
 
+    if (project.hasProperty("importMCDevDebug")) {
+      dumpPossibleImports()
+      dumpNeededImports(patches)
+    }
+
     // Extra imports from mcdevimports.conf
     loadImportsConfiguration()?.run {
       import(this)
@@ -226,13 +231,19 @@ public open class ImportMCDev : ToothpickInternalTask() {
     return extraImports
   }
 
-  @Suppress("unused")
   private fun dumpPossibleImports() {
-    val dumpFile = toothpick.project.projectDir.resolve("mcdevimports-dump.conf")
+    val dumpFile = toothpick.project.projectDir.resolve("mcdevimports-possible-dump.conf")
     val allImports = ImportsContainer(
       findPossibleNMSImports(),
       findPossibleLibraryImports()
     )
+    val loader = createImportsConfigurationLoader(dumpFile)
+    loader.save(loader.createNode().set(allImports))
+  }
+
+  private fun dumpNeededImports(patches: List<File>) {
+    val dumpFile = toothpick.project.projectDir.resolve("mcdevimports-needed-dump.conf")
+    val allImports = findNeededImports(patches)
     val loader = createImportsConfigurationLoader(dumpFile)
     loader.save(loader.createNode().set(allImports))
   }
