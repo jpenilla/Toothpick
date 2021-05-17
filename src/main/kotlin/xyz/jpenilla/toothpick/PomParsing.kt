@@ -27,25 +27,24 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.gradle.api.Project
 import xyz.jpenilla.toothpick.data.MavenPom
 
 private val mapper = XmlMapper.builder()
   .addModule(kotlinModule())
   .build()
 
-internal fun Project.parsePomToTree(): JsonNode? {
+internal fun ToothpickSubproject.parsePomToTree(): JsonNode? {
   val pomContents = readPomText() ?: return null
   return mapper.readTree(pomContents)
 }
 
-internal fun Project.parsePom(): MavenPom? {
+internal fun ToothpickSubproject.parsePom(): MavenPom? {
   val pomContents = readPomText() ?: return null
   return mapper.readValue<MavenPom>(pomContents)
 }
 
-private fun Project.readPomText(): String? {
-  val file = file("pom.xml")
+private fun ToothpickSubproject.readPomText(): String? {
+  val file = project.file("pom.xml")
   if (!file.exists()) {
     return null
   }

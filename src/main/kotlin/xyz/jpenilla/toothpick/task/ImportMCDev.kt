@@ -186,11 +186,8 @@ public open class ImportMCDev : ToothpickInternalTask() {
   }
 
   private fun findNeededLibraryImports(patchLines: List<String>): Set<LibraryImport> {
-    val knownLibraryImports = findPossibleLibraryImports()
-    val knownImportMap = HashMap<String, LibraryImport>()
-    for (knownImport in knownLibraryImports) {
-      knownImportMap["${knownImport.prefix}/${knownImport.file}.java"] = knownImport
-    }
+    val knownImportMap = findPossibleLibraryImports()
+      .associateBy { "${it.prefix}/${it.file}.java" }
     return patchLines.asSequence()
       .distinct()
       .map { it.substringAfter("+++ b/src/main/java/") }

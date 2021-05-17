@@ -53,43 +53,45 @@ import xyz.jpenilla.toothpick.shadow.ModifiedLog4j2PluginsCacheFileTransformer
 import xyz.jpenilla.toothpick.shadow.ToothpickRelocator
 import java.text.SimpleDateFormat
 import java.util.Date
-import kotlin.text.Charsets.UTF_8
 
-internal fun ToothpickExtension.configureSubprojects() {
-  for (subproject in subprojects) {
-    subproject.project.commonSubprojectConfiguration()
-  }
-  serverProject.project.configureServerProject(serverProject)
-  apiProject.project.configureApiProject(apiProject)
-}
-
-private fun Project.commonSubprojectConfiguration() {
+internal fun Project.commonSubprojectConfiguration() {
   apply<JavaLibraryPlugin>()
   apply<MavenPublishPlugin>()
 
   tasks.withType<JavaCompile> {
-    options.encoding = UTF_8.name()
+    options.encoding = Charsets.UTF_8.name()
   }
   tasks.withType<Javadoc> {
-    options.encoding = UTF_8.name()
+    options.encoding = Charsets.UTF_8.name()
   }
+}
 
+private fun Project.setupPublication(subproject: ToothpickSubproject) {
   extensions.configure<PublishingExtension> {
     publications {
       create<MavenPublication>("mavenJava") {
-        groupId = rootProject.group as String
-        version = rootProject.version as String
+        groupId = project.group as String
+        version = project.version as String
         pom {
           name.set(project.name)
-          url.set(toothpick.forkUrl)
+          url.set(subproject.toothpick.forkUrl)
         }
       }
     }
   }
 }
 
-private fun Project.configureServerProject(subproject: ToothpickSubproject) {
+private fun Project.configurePublication(configurer: MavenPublication.() -> Unit) {
+  extensions.configure<PublishingExtension> {
+    publications {
+      getByName<MavenPublication>("mavenJava").apply(configurer)
+    }
+  }
+}
+
+internal fun Project.configureServerProject(subproject: ToothpickSubproject) {
   apply<ShadowPlugin>()
+  setupPublication(subproject)
 
   val generatePomFileForMavenJavaPublication by tasks.getting(GenerateMavenPom::class) {
     destination = project.buildDir.resolve("tmp/pom.xml")
@@ -109,11 +111,12 @@ private fun Project.configureServerProject(subproject: ToothpickSubproject) {
     dependsOn(generatePomFileForMavenJavaPublication)
     transform(ModifiedLog4j2PluginsCacheFileTransformer::class.java)
     mergeServiceFiles()
+
     manifest {
       attributes(
         "Main-Class" to "org.bukkit.craftbukkit.Main",
         "Implementation-Title" to "CraftBukkit",
-        "Implementation-Version" to toothpick.forkVersion,
+        "Implementation-Version" to subproject.toothpick.forkVersion,
         "Implementation-Vendor" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Date()),
         "Specification-Title" to "Bukkit",
         "Specification-Version" to project.version.toString(),
@@ -121,6 +124,7 @@ private fun Project.configureServerProject(subproject: ToothpickSubproject) {
         "Multi-Release" to true
       )
     }
+
     from(project.buildDir.resolve("tmp/pom.xml")) {
       // dirty hack to make "java -Dpaperclip.install=true -jar paperclip.jar" work without forking paperclip
       into("META-INF/maven/io.papermc.paper/paper")
@@ -141,17 +145,13 @@ private fun Project.configureServerProject(subproject: ToothpickSubproject) {
     dependsOn(shadowJar)
   }
 
-  extensions.configure<PublishingExtension> {
-    publications {
-      getByName<MavenPublication>("mavenJava") {
-        artifactId = rootProject.name
-        artifact(tasks["shadowJar"])
-      }
-    }
+  configurePublication {
+    artifactId = subproject.toothpick.forkNameLowercase
+    artifact(tasks["shadowJar"])
   }
 }
 
-private fun Project.configureApiProject(subproject: ToothpickSubproject) {
+internal fun Project.configureApiProject(subproject: ToothpickSubproject) {
   tasks.withType<Jar> {
     doFirst {
       buildDir.resolve("tmp/pom.properties")
@@ -188,13 +188,10 @@ private fun Project.configureApiProject(subproject: ToothpickSubproject) {
     }
   }
 
-  extensions.configure<PublishingExtension> {
-    publications {
-      getByName<MavenPublication>("mavenJava") {
-        artifactId = project.name
-        from(components["java"])
-      }
-    }
+  setupPublication(subproject)
+  configurePublication {
+    artifactId = project.name
+    from(components["java"])
   }
 
   extensions.configure<JavaPluginExtension> {

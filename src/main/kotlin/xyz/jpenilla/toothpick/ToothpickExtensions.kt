@@ -28,23 +28,14 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.getByName
-import java.io.File
 
-public val Project.toothpick: ToothpickExtension
-  get() = rootProject.extensions.findByType(ToothpickExtension::class)!!
-
-public fun Project.toothpick(receiver: ToothpickExtension.() -> Unit) {
-  if (toothpick.subprojects != emptySet<ToothpickSubproject>()) error("Toothpick should only be configured a single time using the 'Project.toothpick { ... }' extension function.")
-  receiver(toothpick)
-  allprojects {
-    group = toothpick.groupId
-    version = "${toothpick.minecraftVersion}-${toothpick.nmsRevision}"
+internal val Project.toothpick: ToothpickExtension
+  get() {
+    val find = extensions.findByType(ToothpickExtension::class)
+    if (find != null) return find
+    return parent?.extensions?.findByType(ToothpickExtension::class)
+      ?: error("Could not locate ToothpickExtension.")
   }
-  toothpick.configureSubprojects()
-}
-
-internal val Project.rootProjectDir: File
-  get() = rootProject.projectDir
 
 internal val TaskContainer.shadowJar: ShadowJar
   get() = getByName("shadowJar", ShadowJar::class)

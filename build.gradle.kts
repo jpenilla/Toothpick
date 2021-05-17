@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xyz.jpenilla"
-version = "1.0.0-SNAPSHOT"
+version = "1.1.0-SNAPSHOT"
 description = "Gradle plugin to assist in forking Paper"
 
 repositories {
@@ -16,6 +16,7 @@ repositories {
 }
 
 dependencies {
+  implementation(libs.indraGit)
   implementation(libs.bundles.jackson)
   implementation(libs.bundles.configurate)
   implementation(libs.shadow)
@@ -26,6 +27,11 @@ kotlin {
 }
 
 tasks {
+  jar {
+    manifest {
+      attributes("Implementation-Version" to project.version)
+    }
+  }
   compileKotlin {
     kotlinOptions.apiVersion = "1.4"
     kotlinOptions.jvmTarget = "1.8"
@@ -56,8 +62,14 @@ indraPluginPublishing {
     "toothpick",
     "xyz.jpenilla.toothpick.Toothpick",
     "Toothpick",
-    project.description,
-    listOf("minecraft", "paper", "forking", "patching")
+    project.description
   )
+  plugin(
+    "toothpick.settings",
+    "xyz.jpenilla.toothpick.ToothpickSettingsPlugin",
+    "Toothpick Settings",
+    "Companion settings plugin for Toothpick"
+  )
+  bundleTags("minecraft", "paper", "forking", "patching")
   website("https://github.com/jpenilla/Toothpick")
 }

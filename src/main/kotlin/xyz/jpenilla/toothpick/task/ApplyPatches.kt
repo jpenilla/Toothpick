@@ -27,7 +27,6 @@ import org.gradle.api.tasks.TaskAction
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
 import xyz.jpenilla.toothpick.reEnableGitSigning
-import xyz.jpenilla.toothpick.rootProjectDir
 import xyz.jpenilla.toothpick.temporarilyDisableGitSigning
 import java.nio.file.Files
 
@@ -63,7 +62,7 @@ public open class ApplyPatches : ToothpickTask() {
         ensureSuccess(gitCmd("fetch", "origin", dir = projectDir))
         ensureSuccess(gitCmd("reset", "--hard", "origin/master", dir = projectDir))
       } else {
-        ensureSuccess(gitCmd("clone", baseDir.absolutePath, projectDir.absolutePath, dir = project.rootProjectDir))
+        ensureSuccess(gitCmd("clone", baseDir.absolutePath, projectDir.absolutePath, dir = toothpick.project.projectDir))
       }
       logger.lifecycle(">>> Done resetting subproject $name")
 

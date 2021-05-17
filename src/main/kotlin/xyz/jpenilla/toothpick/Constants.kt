@@ -30,13 +30,13 @@ internal object Constants {
   object Repositories {
     const val MINECRAFT = "https://libraries.minecraft.net/"
     const val AIKAR = "https://repo.aikar.co/content/groups/aikar/"
+    const val PAPER = "https://papermc.io/repo/repository/maven-public/"
   }
 
   object Dependencies {
-    object PaperMinecraftServer {
-      const val GROUP_ID = "io.papermc"
-      const val ARTIFACT_ID = "minecraft-server"
-    }
+    data class DependencyInfo(val groupId: String, val artifactId: String)
+    val paperMinecraftServer = DependencyInfo("io.papermc", "minecraft-server")
+    val paperMojangApi = DependencyInfo("com.destroystokyo.paper", "paper-mojangapi")
   }
 
   const val IMPORTS_CONFIGURATION_HEADER: String =
@@ -46,11 +46,8 @@ internal object Constants {
 
 nms-imports=[
     "com.mojang.math.Quaternion",
-    "net.minecraft.network.syncher.DataWatcherRegistry",
     "net.minecraft.network.chat.IChatMutableComponent",
-    "net.minecraft.network.protocol.game.PacketPlayOutAdvancements",
     "net.minecraft.world.entity.ai.goal.PathfinderGoalFishSchool",
-    "net.minecraft.world.level.levelgen.feature.WorldGenFlowers"
 ]"""
 
   const val LIBRARY_IMPORTS_COMMENT: String = """Example library-imports

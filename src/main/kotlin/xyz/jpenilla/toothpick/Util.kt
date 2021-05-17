@@ -23,20 +23,12 @@
  */
 package xyz.jpenilla.toothpick
 
-import org.gradle.api.Project
 import org.gradle.api.logging.Logging
 import java.io.File
 import java.util.LinkedList
 import kotlin.streams.asSequence
 
 public data class CmdResult(val exitCode: Int, val output: String?)
-
-public fun Project.cmd(
-  vararg args: String,
-  dir: File = rootProject.projectDir,
-  printOut: Boolean = false
-): CmdResult =
-  cmdImpl(*args, dir = dir, printOut = printOut)
 
 public fun cmd(
   vararg args: String,
@@ -86,26 +78,12 @@ internal fun ensureSuccess(
   return output
 }
 
-public fun Project.gitCmd(
-  vararg args: String,
-  dir: File = rootProject.projectDir,
-  printOut: Boolean = false
-): CmdResult =
-  cmd("git", *args, dir = dir, printOut = printOut)
-
 public fun gitCmd(
   vararg args: String,
   dir: File,
   printOut: Boolean = false
 ): CmdResult =
   cmd("git", *args, dir = dir, printOut = printOut)
-
-public fun Project.bashCmd(
-  vararg args: String,
-  dir: File = rootProject.projectDir,
-  printOut: Boolean = false
-): CmdResult =
-  cmd("bash", "-c", *args, dir = dir, printOut = printOut)
 
 public fun bashCmd(
   vararg args: String,

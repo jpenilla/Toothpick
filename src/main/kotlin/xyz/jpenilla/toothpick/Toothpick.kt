@@ -25,23 +25,48 @@ package xyz.jpenilla.toothpick
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.repositories
-import xyz.jpenilla.toothpick.Constants.Dependencies.PaperMinecraftServer
+import org.gradle.kotlin.dsl.withType
+import xyz.jpenilla.toothpick.Constants.Dependencies
 import xyz.jpenilla.toothpick.Constants.Repositories
 
 public class Toothpick : Plugin<Project> {
   override fun apply(project: Project) {
     project.extensions.create<ToothpickExtension>("toothpick", project)
 
+    // Apply indra-git to parent for versioning and etc.
+    project.plugins.apply("net.kyori.indra.git")
+
+    project.tasks.withType<Jar> {
+      // We assume the parent project should not produce any artifacts
+      onlyIf { false }
+    }
+
     project.afterEvaluate {
+      if (toothpick.subprojects.isEmpty()) {
+        error("You have not configured the API and Server subprojects with the ToothpickExtension!")
+      }
+
+      sequenceOf(project, toothpick.apiProject.project, toothpick.serverProject.project).forEach {
+        it.group = toothpick.groupId
+        it.version = "${toothpick.minecraftVersion}-${toothpick.nmsRevision}"
+      }
+
+      toothpick.apiProject.project.configureApiProject(toothpick.apiProject)
+      toothpick.serverProject.project.configureServerProject(toothpick.serverProject)
+
       for (subproject in toothpick.subprojects) {
         configureRepositories(subproject)
         configureDependencies(subproject)
       }
       initToothpickTasks()
+
+      logger.lifecycle("Toothpick Gradle Plugin Version '{}'", Toothpick::class.java.`package`.implementationVersion)
+      logger.lifecycle("Configured for '{}' version '{}' (Minecraft {})", toothpick.forkName, toothpick.forkVersion, toothpick.minecraftVersion)
     }
   }
 
@@ -50,9 +75,14 @@ public class Toothpick : Plugin<Project> {
       mavenCentral()
       maven(Repositories.MINECRAFT)
       maven(Repositories.AIKAR)
+      maven(Repositories.PAPER) {
+        content {
+          includeModule(Dependencies.paperMojangApi.groupId, Dependencies.paperMojangApi.artifactId)
+        }
+      }
       mavenLocal {
         content {
-          includeModule(PaperMinecraftServer.GROUP_ID, PaperMinecraftServer.ARTIFACT_ID)
+          includeModule(Dependencies.paperMinecraftServer.groupId, Dependencies.paperMinecraftServer.artifactId)
         }
       }
       loadRepositories(subproject)

@@ -23,26 +23,11 @@
  */
 package xyz.jpenilla.toothpick
 
-import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.project
 import xyz.jpenilla.toothpick.data.Dependency
-
-@Deprecated("This function no longer does anything and should not be called. Toothpick will properly load repositories on it's own without calling this function.")
-public fun RepositoryHandler.loadRepositories(project: Project) {
-  project.gradle.buildFinished {
-    project.logger.warn("${project.name} uses deprecated API 'loadRepositories' in it's buildscript.")
-  }
-}
-
-@Deprecated("This function no longer does anything and should not be called. Toothpick will properly load dependencies on it's own without calling this function.")
-public fun DependencyHandlerScope.loadDependencies(project: Project) {
-  project.gradle.buildFinished {
-    project.logger.warn("${project.name} uses deprecated API 'loadDependencies' in it's buildscript.")
-  }
-}
 
 internal fun RepositoryHandler.loadRepositories(subproject: ToothpickSubproject) {
   // Load repositories
@@ -55,28 +40,28 @@ internal fun RepositoryHandler.loadRepositories(subproject: ToothpickSubproject)
 internal fun DependencyHandlerScope.loadDependencies(subproject: ToothpickSubproject) {
   // Load dependencies
   val mavenPom = subproject.pom ?: return
-  val project = subproject.project
   mavenPom.dependencyManagement?.dependencies?.forEach { dependency ->
-    loadDependency(project, dependency)
+    loadDependency(subproject, dependency)
   }
   mavenPom.dependencies.forEach { dependency ->
-    loadDependency(project, dependency)
+    loadDependency(subproject, dependency)
   }
 }
 
 @Suppress("unused_variable")
-private fun DependencyHandlerScope.loadDependency(project: Project, dependency: Dependency) {
+private fun DependencyHandlerScope.loadDependency(subproject: ToothpickSubproject, dependency: Dependency) {
+  val project = subproject.project
   val (groupId, artifactId, version, scope, classifier, type, exclusions) = dependency
 
   val dependencyString = listOfNotNull(groupId, artifactId, version, classifier).joinToString(":")
   project.logger.debug("Read $scope scope dependency '$dependencyString' from '${project.name}' pom.xml")
 
   // Special case API
-  if (artifactId == project.toothpick.apiProject.project.name
-    || artifactId == "${project.toothpick.upstreamLowercase}-api"
+  if (artifactId == subproject.toothpick.apiProject.project.name
+    || artifactId == "${subproject.toothpick.upstreamLowercase}-api"
   ) {
-    if (project == project.toothpick.serverProject.project) {
-      "api"(project(":${project.toothpick.apiProject.project.name}"))
+    if (project == subproject.toothpick.serverProject.project) {
+      "api"(project(subproject.toothpick.apiProject.project.path))
     }
     return
   }
