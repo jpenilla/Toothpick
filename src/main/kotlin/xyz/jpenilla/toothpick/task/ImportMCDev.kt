@@ -104,14 +104,17 @@ public open class ImportMCDev : ToothpickInternalTask() {
       )
     }
 
-    // Imports needed to apply patches
+    // Get server patches
     val patches = Files.list(toothpick.serverProject.patchesDir.toPath()).map { it.toFile() }.toList()
-    import(findNeededImports(patches))
 
+    // If we have debug enabled, run it before importing anything
     if (project.hasProperty("importMCDevDebug")) {
       dumpPossibleImports()
       dumpNeededImports(patches)
     }
+
+    // Imports needed to apply patches
+    import(findNeededImports(patches))
 
     // Extra imports from mcdevimports.conf
     loadImportsConfiguration()?.run {
