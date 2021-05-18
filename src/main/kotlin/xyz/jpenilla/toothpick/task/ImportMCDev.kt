@@ -176,7 +176,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
         libraryFolder.walk()
           .filter { it.isFile && it.name.endsWith(".java") }
           .map { sourceFile ->
-            val prefix = sourceFile.path.substringAfter("libraries/$group/$library/").substringBeforeLast("/")
+            val prefix = sourceFile.relativeTo(libraryFolder).path.replace('\\', '/').substringBeforeLast('/')
             LibraryImport(group, library, prefix, sourceFile.nameWithoutExtension)
           }
           .toCollection(knownLibraryImports)
