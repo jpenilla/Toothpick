@@ -46,7 +46,8 @@ internal data class ImportsContainer(
 internal data class LibraryImport(val group: String, val library: String, val prefix: String, val file: String)
 
 public open class ImportMCDev : ToothpickInternalTask() {
-  private val upstreamServer = toothpick.serverProject.baseDir
+  private val upstreamServer
+    get() = toothpick.serverProject.baseDir
   private val importLog = ArrayList<String>()
 
   private fun importNMS(className: String) {
