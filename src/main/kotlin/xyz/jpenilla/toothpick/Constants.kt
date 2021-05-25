@@ -27,6 +27,11 @@ internal object Constants {
   const val TASK_GROUP = "toothpick"
   const val INTERNAL_TASK_GROUP = "toothpick_internal"
 
+  object Properties {
+    const val NO_RELOCATE = "noRelocate"
+    const val FAST = "fast"
+  }
+
   object Repositories {
     const val MINECRAFT = "https://libraries.minecraft.net/"
     const val AIKAR = "https://repo.aikar.co/content/groups/aikar/"

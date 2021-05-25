@@ -42,7 +42,7 @@ import xyz.jpenilla.toothpick.task.registerRunTasks
 
 internal fun Project.initToothpickTasks() {
   gradle.taskGraph.whenReady {
-    val fast = project.hasProperty("fast")
+    val fast = project.hasProperty(Constants.Properties.FAST)
     tasks.withType<Test> {
       onlyIf { !fast }
     }

@@ -103,7 +103,7 @@ internal fun Project.configureServerProject(subproject: ToothpickSubproject) {
   }
 
   tasks.getByName("jar", Jar::class) {
-    archiveClassifier.set("dev")
+    archiveClassifier.set("unshaded")
   }
 
   val shadowJar by tasks.getting(ShadowJar::class) {
@@ -130,6 +130,7 @@ internal fun Project.configureServerProject(subproject: ToothpickSubproject) {
       into("META-INF/maven/io.papermc.paper/paper")
     }
 
+    if (hasProperty(Constants.Properties.NO_RELOCATE)) return@getting
     // Import relocations from server pom
     val pom = subproject.pom ?: return@getting
     val shadePlugin = pom.build.plugins.filterIsInstance<ShadePlugin>().firstOrNull() ?: error("Could not find shade plugin in server pom!")
@@ -145,9 +146,14 @@ internal fun Project.configureServerProject(subproject: ToothpickSubproject) {
     dependsOn(shadowJar)
   }
 
+  extensions.configure<JavaPluginExtension> {
+    withSourcesJar()
+  }
+
   configurePublication {
     artifactId = subproject.toothpick.forkNameLowercase
     artifact(tasks["shadowJar"])
+    artifact(tasks["sourcesJar"])
   }
 }
 
@@ -188,15 +194,15 @@ internal fun Project.configureApiProject(subproject: ToothpickSubproject) {
     }
   }
 
+  extensions.configure<JavaPluginExtension> {
+    withSourcesJar()
+    withJavadocJar()
+  }
+
   setupPublication(subproject)
   configurePublication {
     artifactId = project.name
     from(components["java"])
-  }
-
-  extensions.configure<JavaPluginExtension> {
-    withSourcesJar()
-    withJavadocJar()
   }
 }
 
