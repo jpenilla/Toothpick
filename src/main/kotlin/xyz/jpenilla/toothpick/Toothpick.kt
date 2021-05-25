@@ -46,6 +46,7 @@ public class Toothpick : Plugin<Project> {
       onlyIf { false }
     }
 
+    project.initToothpickTasks()
     project.afterEvaluate {
       if (toothpick.subprojects.isEmpty()) {
         error("You have not configured the API and Server subprojects with the ToothpickExtension!")
@@ -63,7 +64,6 @@ public class Toothpick : Plugin<Project> {
         configureRepositories(subproject)
         configureDependencies(subproject)
       }
-      initToothpickTasks()
 
       logger.lifecycle("Toothpick Gradle Plugin Version '{}'", Toothpick::class.java.`package`.implementationVersion)
       logger.lifecycle("Configured for '{}' version '{}' (Minecraft {})", toothpick.forkName, toothpick.forkVersion, toothpick.minecraftVersion)

@@ -26,39 +26,46 @@ package xyz.jpenilla.toothpick.task
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
 import xyz.jpenilla.toothpick.Constants
 import xyz.jpenilla.toothpick.shadowJar
 import xyz.jpenilla.toothpick.toothpick
 
 internal fun Project.registerRunTasks() {
-  tasks.register<JavaExec>("runServer") {
-    group = Constants.TASK_GROUP
-    description = "Spin up a test server"
-    workingDir = projectDir.resolve("run")
-    standardInput = System.`in`
-    val shadowJar = toothpick.serverProject.project.tasks.shadowJar
-    dependsOn(shadowJar)
-    val patchedJar = shadowJar.archiveFile.get().asFile
-    classpath(patchedJar)
-    args = listOf("nogui")
-    doFirst {
-      if (!workingDir.exists()) workingDir.mkdir()
+  fun registerRunTask(name: String, block: JavaExec.() -> Unit): TaskProvider<JavaExec> =
+    tasks.register<JavaExec>(name) {
+      group = Constants.TASK_GROUP
+      workingDir = projectDir.resolve("run")
+      doFirst {
+        if (!workingDir.exists()) workingDir.mkdir()
+      }
+      standardInput = System.`in`
+      args("--nogui")
+      systemProperty("net.kyori.adventure.text.warnWhenLegacyFormattingDetected", true)
+      block(this)
     }
+
+  val runServer = registerRunTask("runServer") {
+    description = "Spin up a test server"
   }
 
-  tasks.register<JavaExec>("runDevServer") {
-    group = Constants.TASK_GROUP
+  val runDevServer = registerRunTask("runDevServer") {
     description = "Spin up a non-relocated test server"
-    workingDir = projectDir.resolve("run")
-    standardInput = System.`in`
-    classpath = toothpick.serverProject.project.convention.getPlugin(JavaPluginConvention::class.java)
-      .sourceSets.getByName("main").runtimeClasspath
     main = "org.bukkit.craftbukkit.Main"
-    args = listOf("nogui")
     systemProperty("disable.watchdog", true)
-    doFirst {
-      if (!workingDir.exists()) workingDir.mkdir()
+  }
+
+  afterEvaluate {
+    runServer.configure {
+      val shadowJar = toothpick.serverProject.project.tasks.shadowJar
+      dependsOn(shadowJar)
+      classpath(shadowJar.archiveFile)
+    }
+
+    runDevServer.configure {
+      classpath = toothpick.serverProject.project.convention.getPlugin(JavaPluginConvention::class.java)
+        .sourceSets.getByName("main").runtimeClasspath
     }
   }
 }

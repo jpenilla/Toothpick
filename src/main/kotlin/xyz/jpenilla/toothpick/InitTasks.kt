@@ -24,12 +24,12 @@
 package xyz.jpenilla.toothpick
 
 import org.gradle.api.Project
+import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import xyz.jpenilla.toothpick.task.ApplyPatches
-import xyz.jpenilla.toothpick.task.Clean
 import xyz.jpenilla.toothpick.task.ImportMCDev
 import xyz.jpenilla.toothpick.task.InitGitSubmodules
 import xyz.jpenilla.toothpick.task.Paperclip
@@ -51,7 +51,7 @@ internal fun Project.initToothpickTasks() {
     }
   }
 
-  val build = tasks.getByName("build") {
+  val build = tasks.named("build") {
     doFirst {
       val readyToBuild =
         toothpick.upstreamDir.resolve(".git").exists()
@@ -64,9 +64,13 @@ internal fun Project.initToothpickTasks() {
 
   val initGitSubmodules = tasks.register<InitGitSubmodules>("initGitSubmodules")
 
-  val setupUpstream = tasks.register<SetupUpstream>("setupUpstream") {
-    if (!toothpick.upstreamDir.resolve(".git").exists()) {
-      dependsOn(initGitSubmodules)
+  val setupUpstream = tasks.register<SetupUpstream>("setupUpstream")
+
+  afterEvaluate {
+    setupUpstream.configure {
+      if (!toothpick.upstreamDir.resolve(".git").exists()) {
+        dependsOn(initGitSubmodules)
+      }
     }
   }
 
@@ -74,49 +78,74 @@ internal fun Project.initToothpickTasks() {
     mustRunAfter(setupUpstream)
   }
 
-  tasks.register<Paperclip>("paperclip") {
+  val paperclip = tasks.register<Paperclip>("paperclip") {
     dependsOn(build)
-    dependsOn(toothpick.apiProject.project.tasks.getByName("build"))
-    dependsOn(toothpick.serverProject.project.tasks.getByName("build"))
-    val shadowJar = toothpick.serverProject.project.tasks.shadowJar
-    patchedJar.set(shadowJar.archiveFile)
   }
 
-  tasks.register<ApplyPatches>("applyPatches") {
-    // If Paper has not been setup yet or if we modified the submodule (i.e. upstream update), patch
-    with(toothpick) {
-      if (!lastUpstream.exists()
-        || !upstreamDir.resolve(".git").exists()
-        || lastUpstream.readText() != gitHash(upstreamDir)
-      ) {
-        dependsOn(setupUpstream)
-      }
+  afterEvaluate {
+    paperclip.configure {
+      dependsOn(toothpick.apiProject.project.tasks.getByName("build"))
+      dependsOn(toothpick.serverProject.project.tasks.getByName("build"))
+      val shadowJar = toothpick.serverProject.project.tasks.shadowJar
+      patchedJar.set(shadowJar.archiveFile)
     }
+  }
+
+  val applyPatches = tasks.register<ApplyPatches>("applyPatches") {
+    // If Paper has not been setup yet or if we modified the submodule (i.e. upstream update), patch
     mustRunAfter(setupUpstream)
     dependsOn(importMCDev)
   }
 
+  afterEvaluate {
+    applyPatches.configure {
+      with(toothpick) {
+        if (!lastUpstream.exists()
+          || !upstreamDir.resolve(".git").exists()
+          || lastUpstream.readText() != gitHash(upstreamDir)
+        ) {
+          dependsOn(setupUpstream)
+        }
+      }
+    }
+  }
+
   tasks.register<RebuildPatches>("rebuildPatches")
 
-  tasks.register<UpdateUpstream>("updateUpstream") {
-    if (!toothpick.upstreamDir.resolve(".git").exists()) {
-      dependsOn(initGitSubmodules)
-    }
+  val updateUpstream = tasks.register<UpdateUpstream>("updateUpstream") {
     finalizedBy(setupUpstream)
+  }
+
+  afterEvaluate {
+    updateUpstream.configure {
+      if (!toothpick.upstreamDir.resolve(".git").exists()) {
+        dependsOn(initGitSubmodules)
+      }
+    }
   }
 
   tasks.register<UpstreamCommit>("upstreamCommit")
 
   registerRunTasks()
 
-  tasks.register<Clean>("cleanSubprojects") {
+  val cleanSubprojects = tasks.register<Delete>("cleanSubprojects") {
     description = "Deletes the Server and API project folders. Warning! This is irreversible, and could cause you to lose work if used by mistake!"
-    clean(toothpick.apiProject.projectDir, toothpick.serverProject.projectDir)
   }
 
-  tasks.register<Clean>("cleanToothpick") {
+  afterEvaluate {
+    cleanSubprojects.configure {
+      delete(toothpick.apiProject.projectDir, toothpick.serverProject.projectDir)
+    }
+  }
+
+  val cleanToothpick = tasks.register<Delete>("cleanToothpick") {
     description = "Deletes the Server and API project folders, as well as the upstream folder. Warning! This is irreversible, and could cause you to lose work if used by mistake!"
-    clean(toothpick.apiProject.projectDir, toothpick.serverProject.projectDir, toothpick.upstreamDir)
+  }
+
+  afterEvaluate {
+    cleanToothpick.configure {
+      delete(toothpick.apiProject.projectDir, toothpick.serverProject.projectDir, toothpick.upstreamDir)
+    }
   }
 
   tasks.register<RepackageNMS>("repackageNMS") {
