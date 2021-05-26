@@ -29,8 +29,9 @@ import xyz.jpenilla.toothpick.gitCmd
 import xyz.jpenilla.toothpick.reEnableGitSigning
 import xyz.jpenilla.toothpick.temporarilyDisableGitSigning
 import java.nio.file.Files
+import java.util.LinkedList
 
-public open class ApplyPatches : ToothpickTask() {
+public abstract class ApplyPatches : ToothpickTask() {
   public companion object {
     /**
      * The default git arguments to apply patches.
@@ -40,15 +41,7 @@ public open class ApplyPatches : ToothpickTask() {
     public val DEFAULT_APPLY_COMMAND: List<String> = listOf("am", "--3way", "--ignore-whitespace")
   }
 
-  private val applyCommand = ArrayList(DEFAULT_APPLY_COMMAND)
-
-  public fun applyCommand(vararg gitArguments: String): Unit =
-    applyCommand(gitArguments.toList())
-
-  public fun applyCommand(gitArguments: List<String>) {
-    applyCommand.clear()
-    applyCommand.addAll(gitArguments)
-  }
+  private val applyCommand = LinkedList(DEFAULT_APPLY_COMMAND)
 
   @TaskAction
   private fun applyPatches() {
@@ -93,4 +86,36 @@ public open class ApplyPatches : ToothpickTask() {
       logger.lifecycle(">>> Done applying patches to $name")
     }
   }
+
+  /**
+   * Replaces the currently configured apply command.
+   *
+   * @param gitArguments new git arguments
+   */
+  public fun applyCommand(vararg gitArguments: String): Unit =
+    applyCommand(gitArguments.toList())
+
+  /**
+   * Replaces the currently configured apply command.
+   *
+   * @param gitArguments new git arguments
+   */
+  public fun applyCommand(gitArguments: List<String>) {
+    applyCommand.clear()
+    applyCommand.addAll(gitArguments)
+  }
+
+  /**
+   * Append the specified arguments to the currently configured apply command.
+   *
+   * @param arguments arguments to append
+   */
+  public fun argument(vararg arguments: String) {
+    applyCommand.addAll(arguments)
+  }
+
+  /**
+   * Gets the currently configured apply command.
+   */
+  public fun applyCommand(): List<String> = applyCommand
 }
