@@ -23,9 +23,7 @@
  */
 package xyz.jpenilla.toothpick
 
-import net.kyori.indra.git.IndraGitExtension
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.findByType
 import java.io.File
 import java.util.Locale
 
@@ -94,9 +92,15 @@ public open class ToothpickExtension(public val project: Project) {
    * @return the commit hash, or null if the [project] is not in a git repository or has not had its initial commit
    */
   public fun commitHash(length: Int? = 7): String? {
-    val indraGit = project.extensions.findByType(IndraGitExtension::class) ?: error("Could not locate IndraGitExtension.")
-    return indraGit.commit()?.name?.run {
-      if (length == null) this else substring(0, length)
+    val result = gitCmd("rev-parse", "HEAD", dir = project.projectDir)
+    if (result.exitCode != 0 || result.output == null) {
+      return null
+    }
+    val hash = result.output.trim()
+    return if (length == null) {
+      hash
+    } else {
+      hash.substring(0, length)
     }
   }
 

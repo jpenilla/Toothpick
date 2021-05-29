@@ -16,7 +16,6 @@ repositories {
 }
 
 dependencies {
-  implementation(libs.indraGit)
   implementation(libs.bundles.jackson)
   implementation(libs.bundles.configurate)
   implementation(libs.shadow)

@@ -38,11 +38,6 @@ dependencies:
     name: jackson-module-kotlin
     version: { ref: jackson }
 
-  indraGit:
-    group: net.kyori
-    name: indra-git
-    version: *indra
-
 bundles:
   configurate:
     - configurateHocon
