@@ -38,9 +38,6 @@ public class Toothpick : Plugin<Project> {
   override fun apply(project: Project) {
     project.extensions.create<ToothpickExtension>("toothpick", project)
 
-    // Apply indra-git to parent for versioning and etc.
-    project.plugins.apply("net.kyori.indra.git")
-
     project.tasks.withType<Jar> {
       // We assume the parent project should not produce any artifacts
       onlyIf { false }
