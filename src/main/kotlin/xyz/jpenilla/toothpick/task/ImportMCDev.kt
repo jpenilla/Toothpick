@@ -35,8 +35,6 @@ import xyz.jpenilla.toothpick.Constants
 import xyz.jpenilla.toothpick.ensureSuccess
 import xyz.jpenilla.toothpick.gitCmd
 import java.io.File
-import java.nio.file.Files
-import kotlin.streams.toList
 
 internal data class ImportsContainer(
   @Comment(Constants.NMS_IMPORTS_COMMENT) val nmsImports: Set<String> = emptySet(),
@@ -45,7 +43,7 @@ internal data class ImportsContainer(
 
 internal data class LibraryImport(val group: String, val library: String, val prefix: String, val file: String)
 
-public open class ImportMCDev : ToothpickInternalTask() {
+public abstract class ImportMCDev : ToothpickInternalTask() {
   private val upstreamServer
     get() = toothpick.serverProject.baseDir
   private val importLog = ArrayList<String>()
@@ -106,7 +104,7 @@ public open class ImportMCDev : ToothpickInternalTask() {
     }
 
     // Get server patches
-    val patches = Files.list(toothpick.serverProject.patchesDir.toPath()).map { it.toFile() }.toList()
+    val patches = toothpick.serverProject.patchesDir.listFiles()?.toList() ?: emptyList()
 
     // If we have debug enabled, run it before importing anything
     if (project.hasProperty("importMCDevDebug")) {
